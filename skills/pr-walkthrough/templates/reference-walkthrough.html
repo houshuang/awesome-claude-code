@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GitHub Integration Architecture — Polaris Deep Dive</title>
+<title>GitHub Integration Architecture — Deep Dive</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
@@ -688,10 +688,10 @@ section:nth-child(4) { animation-delay: 0.15s; }
 
 <!-- ═══════════════════════════════════════ HEADER ═══════════════════════════════════════ -->
 <header class="page-header">
-  <div class="kicker">Polaris Architecture Walkthrough</div>
+  <div class="kicker">Acme App Architecture Walkthrough</div>
   <h1>How the GitHub Integration Works</h1>
   <p class="subtitle">
-    A layer-by-layer tour of how Polaris connects to GitHub via WorkOS Pipes,
+    A layer-by-layer tour of how Acme App connects to GitHub via WorkOS Pipes,
     exposes it as AI chat tools, and provides the blueprint for adding any
     external service integration.
   </p>
@@ -725,7 +725,7 @@ section:nth-child(4) { animation-delay: 0.15s; }
   <h2>The Big Picture</h2>
 
   <p>
-    Polaris has an AI chat system where users converse with an LLM that can call <strong>tools</strong> to read and modify their workspace. This PR extends that system to reach <em>outside</em> the workspace&mdash;into GitHub&mdash;so the AI can list repos, search issues, create issues, and assign work to Copilot, all from within a chat conversation.
+    Acme App has an AI chat system where users converse with an LLM that can call <strong>tools</strong> to read and modify their workspace. This PR extends that system to reach <em>outside</em> the workspace&mdash;into GitHub&mdash;so the AI can list repos, search issues, create issues, and assign work to Copilot, all from within a chat conversation.
   </p>
 
   <p>
@@ -777,7 +777,7 @@ section:nth-child(4) { animation-delay: 0.15s; }
 
   <div class="callout insight">
     <span class="callout-label">Key Insight</span>
-    This is the <strong>first external integration</strong> in Polaris's AI system. Every prior tool (searchNodes, createNodes, etc.) operated on local workspace data. The GitHub integration establishes the pattern for how <em>all</em> future external services will connect.
+    This is the <strong>first external integration</strong> in Acme App's AI system. Every prior tool (searchNodes, createNodes, etc.) operated on local workspace data. The GitHub integration establishes the pattern for how <em>all</em> future external services will connect.
   </div>
 </section>
 
@@ -787,7 +787,7 @@ section:nth-child(4) { animation-delay: 0.15s; }
   <h2>OAuth &amp; Token Management</h2>
 
   <p>
-    The hardest part of any third-party integration is authentication. Users need to grant Polaris access to their GitHub account, and the system needs to securely manage access tokens that expire and need refreshing. Polaris delegates all of this to <strong>WorkOS Pipes</strong>.
+    The hardest part of any third-party integration is authentication. Users need to grant Acme App access to their GitHub account, and the system needs to securely manage access tokens that expire and need refreshing. Acme App delegates all of this to <strong>WorkOS Pipes</strong>.
   </p>
 
   <h3>What is WorkOS Pipes?</h3>
@@ -872,7 +872,7 @@ section:nth-child(4) { animation-delay: 0.15s; }
   </div>
 
   <p>
-    Tokens are never stored by Polaris. Every tool invocation fetches a fresh token from WorkOS, which handles refresh logic internally. If the user has revoked access or the token is expired beyond recovery, the tool gets back a clear error that it can surface to the user.
+    Tokens are never stored by Acme App. Every tool invocation fetches a fresh token from WorkOS, which handles refresh logic internally. If the user has revoked access or the token is expired beyond recovery, the tool gets back a clear error that it can surface to the user.
   </p>
 </section>
 
@@ -963,7 +963,7 @@ section:nth-child(4) { animation-delay: 0.15s; }
   <h2>AI Tools: The Six Operations</h2>
 
   <p>
-    The integration exposes six tools to the LLM. Each follows the exact same <code>PolarisTool</code> interface that all existing Polaris tools use&mdash;the LLM doesn't know or care that these tools call an external API.
+    The integration exposes six tools to the LLM. Each follows the exact same <code>AppTool</code> interface that all existing Acme App tools use&mdash;the LLM doesn't know or care that these tools call an external API.
   </p>
 
   <table class="comparison">
@@ -1038,13 +1038,13 @@ progressMessages: {
   failed: <span class="string">"Failed to read issue"</span>,
 }
 
-<span class="comment">// 4. Export as PolarisTool</span>
-<span class="keyword">export const</span> readGithubIssue: <span class="type">PolarisTool</span> = {
+<span class="comment">// 4. Export as AppTool</span>
+<span class="keyword">export const</span> readGithubIssue: <span class="type">AppTool</span> = {
   name, description, inputSchema, executor, progressMessages
 };</code></pre>
 
   <div class="callout pattern">
-    <span class="callout-label">Pattern: PolarisTool</span>
+    <span class="callout-label">Pattern: AppTool</span>
     Every tool, whether it queries the local workspace or calls GitHub, conforms to the same shape: a Zod <code>inputSchema</code> for validation, an <code>executor</code> function receiving <code>(input, context)</code>, and optional <code>progressMessages</code> for the UI. This uniformity means the AI system (ToolRegistry, ToolExecutor, StreamingHandler) doesn't need any special handling for integration tools.
   </div>
 
@@ -1385,7 +1385,7 @@ progressMessages: {
 
   <div class="callout tradeoff">
     <span class="callout-label">Tradeoff Analysis</span>
-    Static registration was the right call for a first integration. With 6 GitHub tools added to ~14 existing tools, the overhead is minimal. If Polaris grows to support 10+ integrations each with 5-10 tools, the LLM would receive 50-100 tool definitions&mdash;at that point, dynamic registration (or at least per-integration enable/disable) would become important.
+    Static registration was the right call for a first integration. With 6 GitHub tools added to ~14 existing tools, the overhead is minimal. If Acme App grows to support 10+ integrations each with 5-10 tools, the LLM would receive 50-100 tool definitions&mdash;at that point, dynamic registration (or at least per-integration enable/disable) would become important.
   </div>
 
   <h3>WorkOS Pipes vs. Custom OAuth</h3>
@@ -1400,7 +1400,7 @@ progressMessages: {
     <tbody>
       <tr>
         <td class="label-cell">WorkOS Pipes (chosen)</td>
-        <td>Zero OAuth implementation code. Token refresh handled automatically. Pre-built UI widget. Already in Polaris (used for calendars).</td>
+        <td>Zero OAuth implementation code. Token refresh handled automatically. Pre-built UI widget. Already in Acme App (used for calendars).</td>
         <td>Vendor dependency. Less control over scopes. Additional cost per provider. Abstraction over GitHub's API.</td>
       </tr>
       <tr>
@@ -1441,9 +1441,9 @@ progressMessages: {
   <ul>
     <li><strong>Issues only.</strong> No PR support (create/review/merge), no file operations (read/write), no Actions/Workflows, no Discussions, no Projects (v2). These are all natural extensions using the same pattern.</li>
     <li><strong>No pagination.</strong> Tools return the first page of results (up to 100 items via <code>perPage</code>). For repos with thousands of issues, this limits discoverability.</li>
-    <li><strong>No webhooks.</strong> Polaris can only <em>pull</em> data from GitHub. It can't <em>react</em> to GitHub events (new issues, PR reviews, etc.) in real-time. This would require a webhook receiver and event routing system.</li>
+    <li><strong>No webhooks.</strong> Acme App can only <em>pull</em> data from GitHub. It can't <em>react</em> to GitHub events (new issues, PR reviews, etc.) in real-time. This would require a webhook receiver and event routing system.</li>
     <li><strong>Read-only comments.</strong> <code>readGithubIssue</code> fetches comments but there's no tool to <em>post</em> comments.</li>
-    <li><strong>No org-level management.</strong> Connection is per-user, not per-organization. If a team shares a Polaris workspace, each member must connect their own GitHub account.</li>
+    <li><strong>No org-level management.</strong> Connection is per-user, not per-organization. If a team shares an Acme App workspace, each member must connect their own GitHub account.</li>
     <li><strong>Static tool presence.</strong> GitHub tools show up in the LLM's tool list even for users who haven't connected GitHub, using tokens for tool definitions that won't be useful.</li>
   </ul>
 
@@ -1454,13 +1454,13 @@ progressMessages: {
     <li><strong>File tools:</strong> <code>readGithubFile</code>, <code>listGithubDirectory</code> for browsing repo contents</li>
     <li><strong>Other integrations:</strong> Linear, Jira, Slack, Notion&mdash;all following the same recipe from Section 8</li>
     <li><strong>Dynamic tools:</strong> Only send integration tools to the LLM when the user has connected that integration</li>
-    <li><strong>Webhook support:</strong> React to GitHub events (new issues, PR reviews) and surface them in Polaris</li>
-    <li><strong>Two-way linking:</strong> When creating a GitHub issue from Polaris, store a backlink in the Polaris workspace so the node links to the issue</li>
+    <li><strong>Webhook support:</strong> React to GitHub events (new issues, PR reviews) and surface them in Acme App</li>
+    <li><strong>Two-way linking:</strong> When creating a GitHub issue from Acme App, store a backlink in the Acme App workspace so the node links to the issue</li>
   </ul>
 
   <div class="callout insight">
     <span class="callout-label">The Bigger Picture</span>
-    This PR transforms Polaris's AI from a workspace-internal system to an <strong>externally-connected agent</strong>. The infrastructure it establishes&mdash;<code>IIntegrationService</code>, scoped token getters, the integration metadata type, the tools-and-skills pattern&mdash;is designed to scale to many integrations. The architectural investment is front-loaded; adding the next integration will be significantly simpler.
+    This PR transforms Acme App's AI from a workspace-internal system to an <strong>externally-connected agent</strong>. The infrastructure it establishes&mdash;<code>IIntegrationService</code>, scoped token getters, the integration metadata type, the tools-and-skills pattern&mdash;is designed to scale to many integrations. The architectural investment is front-loaded; adding the next integration will be significantly simpler.
   </div>
 </section>
 

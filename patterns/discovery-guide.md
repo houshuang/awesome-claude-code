@@ -50,9 +50,9 @@ Name files using terms that match how users describe tasks:
 
 ```
 # Good -- matches natural language queries
-.claude/skills/translate-epub.md
+.claude/skills/process-data.md
 .claude/skills/deploy-production.md
-examples/indonesian-epub-translation.ts
+examples/csv-to-parquet-pipeline.ts
 
 # Bad -- requires knowledge of project internals
 .claude/skills/pipeline-v2.md
@@ -67,7 +67,7 @@ In your CLAUDE.md, list explicit triggers that route Claude to the right skill:
 ## Quick Recognition Triggers
 
 If the user asks about ANY of these tasks:
-- **Translating books** -> Load `bookifier-orchestration` skill
+- **Processing data** -> Load `data-pipeline` skill
 - **Deploying to production** -> Load `deploy` skill
 - **Running tests** -> Load `testing` skill
 ```
@@ -78,7 +78,7 @@ Each level of documentation should point to the next:
 
 ```
 CLAUDE.md
-  -> "Load bookifier-orchestration skill for book tasks"
+  -> "Load data-pipeline skill for ETL tasks"
     -> Skill has complete API docs and workflows
       -> Points to examples/ for working code
         -> Examples reference back to skill for edge cases
@@ -90,8 +90,8 @@ Every documentation file should reference related files:
 
 ```markdown
 ## Related
-- Full API docs: `.claude/skills/bookifier-orchestration.md`
-- Working example: `examples/indonesian-epub-translation.ts`
+- Full API docs: `.claude/skills/data-pipeline.md`
+- Working example: `examples/csv-to-parquet.ts`
 - Architecture: `docs/architecture.md`
 ```
 
