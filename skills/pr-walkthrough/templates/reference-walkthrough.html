@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GitHub Integration Architecture — Polaris Deep Dive</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #1a1a18;
+  --paper: #f5f0e8;
+  --paper-warm: #ede7db;
+  --accent: #c23616;
+  --accent-dim: #c2361633;
+  --blue: #2d5f8a;
+  --blue-dim: #2d5f8a22;
+  --green: #3a7d44;
+  --green-dim: #3a7d4422;
+  --purple: #6a4c93;
+  --purple-dim: #6a4c9322;
+  --orange: #d4820a;
+  --orange-dim: #d4820a22;
+  --gray: #8a8578;
+  --gray-light: #d4cfc5;
+  --gray-lighter: #e8e3d9;
+  --mono: 'DM Mono', 'Menlo', monospace;
+  --serif: 'Source Serif 4', 'Georgia', serif;
+  --display: 'Instrument Serif', 'Georgia', serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: var(--gray-light) transparent;
+}
+
+body {
+  font-family: var(--serif);
+  color: var(--ink);
+  background: var(--paper);
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--accent-dim);
+  color: var(--ink);
+}
+
+/* ─── GRAIN OVERLAY ─── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+/* ─── LAYOUT ─── */
+.page-container {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+/* ─── HEADER ─── */
+.page-header {
+  padding: 6rem 0 4rem;
+  border-bottom: 1px solid var(--ink);
+  margin-bottom: 3rem;
+}
+
+.page-header .kicker {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.kicker::before {
+  content: '';
+  display: inline-block;
+  width: 2rem;
+  height: 1px;
+  background: var(--accent);
+}
+
+.page-header h1 {
+  font-family: var(--display);
+  font-size: 3.2rem;
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin-bottom: 1.5rem;
+}
+
+.page-header .subtitle {
+  font-size: 1.15rem;
+  color: var(--gray);
+  max-width: 38rem;
+  line-height: 1.6;
+}
+
+.page-header .meta {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--gray);
+  margin-top: 2rem;
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* ─── TABLE OF CONTENTS ─── */
+.toc {
+  background: var(--paper-warm);
+  border: 1px solid var(--gray-light);
+  padding: 2rem 2.5rem;
+  margin-bottom: 4rem;
+  position: relative;
+}
+
+.toc::before {
+  content: 'Contents';
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--gray);
+  position: absolute;
+  top: -0.5rem;
+  left: 1.5rem;
+  background: var(--paper-warm);
+  padding: 0 0.5rem;
+}
+
+.toc ol {
+  list-style: none;
+  counter-reset: toc-counter;
+  columns: 2;
+  column-gap: 3rem;
+}
+
+.toc li {
+  counter-increment: toc-counter;
+  break-inside: avoid;
+  margin-bottom: 0.5rem;
+}
+
+.toc a {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--ink);
+  text-decoration: none;
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  transition: color 0.15s;
+}
+
+.toc a::before {
+  content: counter(toc-counter, decimal-leading-zero);
+  color: var(--gray);
+  font-size: 0.65rem;
+  flex-shrink: 0;
+}
+
+.toc a:hover { color: var(--accent); }
+
+/* ─── SECTIONS ─── */
+section {
+  margin-bottom: 4.5rem;
+}
+
+.section-number {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--gray);
+  margin-bottom: 0.75rem;
+  display: block;
+}
+
+h2 {
+  font-family: var(--display);
+  font-size: 2rem;
+  font-weight: 400;
+  line-height: 1.25;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--gray-light);
+}
+
+h3 {
+  font-family: var(--display);
+  font-size: 1.35rem;
+  font-weight: 400;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  color: var(--ink);
+}
+
+h4 {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gray);
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+p { margin-bottom: 1.2rem; }
+
+strong { font-weight: 600; }
+
+/* ─── CODE ─── */
+code {
+  font-family: var(--mono);
+  font-size: 0.82em;
+  background: var(--paper-warm);
+  padding: 0.1em 0.4em;
+  border-radius: 2px;
+  border: 1px solid var(--gray-lighter);
+}
+
+pre {
+  background: var(--ink);
+  color: #e8e3d9;
+  padding: 1.5rem 2rem;
+  margin: 1.5rem 0;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  line-height: 1.75;
+  border-left: 3px solid var(--accent);
+  position: relative;
+}
+
+pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: inherit;
+  color: inherit;
+}
+
+pre .file-label {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: var(--accent);
+  color: var(--paper);
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  padding: 0.25rem 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+.comment { color: #7a7568; font-style: italic; }
+.keyword { color: #d4820a; }
+.string { color: #3a7d44; }
+.type { color: #6a9fd4; }
+.fn { color: #d4a86a; }
+.highlight-line {
+  background: #ffffff0d;
+  display: inline-block;
+  width: 100%;
+  margin: 0 -2rem;
+  padding: 0 2rem;
+}
+
+/* ─── DIAGRAMS ─── */
+.diagram-container {
+  margin: 2rem 0;
+  padding: 2.5rem 2rem;
+  background: white;
+  border: 1px solid var(--gray-light);
+  position: relative;
+  overflow: hidden;
+}
+
+.diagram-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--blue), var(--green), var(--purple));
+}
+
+.diagram-label {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--gray);
+  margin-bottom: 1.5rem;
+}
+
+/* Flow diagrams */
+.flow {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  align-items: center;
+}
+
+.flow-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.flow-box {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  padding: 0.6rem 1.2rem;
+  border: 1.5px solid;
+  background: white;
+  text-align: center;
+  min-width: 120px;
+  position: relative;
+  line-height: 1.4;
+}
+
+.flow-box.accent { border-color: var(--accent); color: var(--accent); }
+.flow-box.blue { border-color: var(--blue); color: var(--blue); background: var(--blue-dim); }
+.flow-box.green { border-color: var(--green); color: var(--green); background: var(--green-dim); }
+.flow-box.purple { border-color: var(--purple); color: var(--purple); background: var(--purple-dim); }
+.flow-box.orange { border-color: var(--orange); color: var(--orange); background: var(--orange-dim); }
+.flow-box.filled { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+.flow-box small {
+  display: block;
+  font-size: 0.6rem;
+  opacity: 0.7;
+  margin-top: 0.2rem;
+}
+
+.flow-arrow {
+  font-family: var(--mono);
+  font-size: 0.9rem;
+  color: var(--gray);
+  text-align: center;
+  padding: 0.3rem 0;
+  user-select: none;
+}
+
+.flow-arrow.horizontal {
+  padding: 0 0.25rem;
+}
+
+.flow-note {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  color: var(--gray);
+  text-align: center;
+  padding: 0.15rem 0;
+  font-style: italic;
+}
+
+/* ─── CALLOUTS ─── */
+.callout {
+  border-left: 3px solid;
+  padding: 1.25rem 1.5rem;
+  margin: 1.5rem 0;
+  background: white;
+  font-size: 0.92rem;
+}
+
+.callout.insight { border-color: var(--blue); }
+.callout.warning { border-color: var(--orange); }
+.callout.pattern { border-color: var(--green); }
+.callout.tradeoff { border-color: var(--purple); }
+
+.callout-label {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.callout.insight .callout-label { color: var(--blue); }
+.callout.warning .callout-label { color: var(--orange); }
+.callout.pattern .callout-label { color: var(--green); }
+.callout.tradeoff .callout-label { color: var(--purple); }
+
+/* ─── LAYER DIAGRAMS ─── */
+.layer-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 1.5rem 0;
+}
+
+.layer {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 1rem;
+  align-items: start;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--gray-lighter);
+}
+
+.layer:last-child { border-bottom: none; }
+
+.layer-label {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding-top: 0.15rem;
+}
+
+.layer-content {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.layer-item {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--gray-light);
+  background: white;
+}
+
+.layer-item.new {
+  border-color: var(--accent);
+  background: #c2361608;
+  position: relative;
+}
+
+.layer-item.new::after {
+  content: 'NEW';
+  position: absolute;
+  top: -0.4rem;
+  right: -0.3rem;
+  font-size: 0.5rem;
+  background: var(--accent);
+  color: white;
+  padding: 0.05rem 0.3rem;
+  letter-spacing: 0.1em;
+}
+
+/* ─── FILE TREE ─── */
+.file-tree {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  line-height: 1.9;
+  background: white;
+  border: 1px solid var(--gray-light);
+  padding: 1.5rem 2rem;
+  margin: 1.5rem 0;
+}
+
+.file-tree .dir { color: var(--blue); }
+.file-tree .file { color: var(--ink); }
+.file-tree .new-file { color: var(--accent); font-weight: 500; }
+.file-tree .indent { padding-left: 1.5rem; }
+.file-tree .indent-2 { padding-left: 3rem; }
+
+/* ─── COMPARISON TABLE ─── */
+.comparison {
+  width: 100%;
+  margin: 1.5rem 0;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.comparison th {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  border-bottom: 2px solid var(--ink);
+  color: var(--gray);
+  font-weight: 500;
+}
+
+.comparison td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--gray-lighter);
+  vertical-align: top;
+}
+
+.comparison tr:last-child td { border-bottom: none; }
+
+.comparison .label-cell {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* ─── LISTS ─── */
+ul, ol {
+  margin-bottom: 1.2rem;
+  padding-left: 1.5rem;
+}
+
+li {
+  margin-bottom: 0.4rem;
+}
+
+li code {
+  font-size: 0.78em;
+}
+
+/* ─── LINKS ─── */
+a {
+  color: var(--blue);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+a:hover {
+  color: var(--accent);
+}
+
+/* ─── ASIDE / MARGIN NOTES ─── */
+.margin-note {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--gray);
+  line-height: 1.5;
+  padding: 0.75rem 1rem;
+  border-left: 2px solid var(--gray-light);
+  margin: 1rem 0;
+}
+
+/* ─── HORIZONTAL RULE ─── */
+hr {
+  border: none;
+  border-top: 1px solid var(--gray-light);
+  margin: 3rem 0;
+}
+
+/* ─── SEQUENCE DIAGRAM ─── */
+.sequence {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 1.5rem 0;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+}
+
+.seq-participants {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.seq-participants::after {
+  content: '';
+  position: absolute;
+  bottom: -0.5rem;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--gray-light);
+}
+
+.seq-participant {
+  text-align: center;
+  padding: 0.5rem 0.75rem;
+  font-weight: 500;
+  border: 1.5px solid;
+  min-width: 90px;
+}
+
+.seq-step {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0;
+}
+
+.seq-left, .seq-right {
+  font-size: 0.65rem;
+  color: var(--gray);
+}
+
+.seq-left { text-align: right; }
+.seq-right { text-align: left; }
+
+.seq-arrow {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.seq-arrow .label {
+  font-size: 0.65rem;
+  padding: 0.15rem 0.5rem;
+  background: var(--paper-warm);
+  border-radius: 2px;
+}
+
+.seq-line {
+  flex: 1;
+  height: 1px;
+  background: var(--ink);
+  min-width: 2rem;
+}
+
+.seq-line.dashed {
+  background: repeating-linear-gradient(90deg, var(--ink) 0, var(--ink) 4px, transparent 4px, transparent 8px);
+}
+
+/* ─── FOOTER ─── */
+.page-footer {
+  border-top: 1px solid var(--ink);
+  padding: 3rem 0 6rem;
+  margin-top: 2rem;
+}
+
+.page-footer p {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--gray);
+}
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 700px) {
+  html { font-size: 15px; }
+  .page-header h1 { font-size: 2.2rem; }
+  .toc ol { columns: 1; }
+  .layer { grid-template-columns: 1fr; }
+  .seq-step { grid-template-columns: 1fr; }
+  .seq-left, .seq-right { text-align: left; }
+  .flow-row { flex-direction: column; }
+}
+
+/* ─── ANIMATIONS ─── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+section, .diagram-container, .callout, pre {
+  animation: fadeUp 0.5s ease both;
+}
+
+section:nth-child(2) { animation-delay: 0.05s; }
+section:nth-child(3) { animation-delay: 0.1s; }
+section:nth-child(4) { animation-delay: 0.15s; }
+</style>
+</head>
+<body>
+<div class="page-container">
+
+<!-- ═══════════════════════════════════════ HEADER ═══════════════════════════════════════ -->
+<header class="page-header">
+  <div class="kicker">Polaris Architecture Walkthrough</div>
+  <h1>How the GitHub Integration Works</h1>
+  <p class="subtitle">
+    A layer-by-layer tour of how Polaris connects to GitHub via WorkOS Pipes,
+    exposes it as AI chat tools, and provides the blueprint for adding any
+    external service integration.
+  </p>
+  <div class="meta">
+    <span class="meta-item">PR #1615</span>
+    <span class="meta-item">Branch: eh/github-integration</span>
+    <span class="meta-item">~1,300 lines added</span>
+    <span class="meta-item">6 tools + 2 skills</span>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════ TOC ═══════════════════════════════════════ -->
+<nav class="toc">
+  <ol>
+    <li><a href="#big-picture">The Big Picture</a></li>
+    <li><a href="#oauth">OAuth &amp; Token Management</a></li>
+    <li><a href="#api-layer">The GitHub API Layer</a></li>
+    <li><a href="#tools">AI Tools: The Six Operations</a></li>
+    <li><a href="#skills">Skills: Compound Workflows</a></li>
+    <li><a href="#wiring">Wiring It All Together</a></li>
+    <li><a href="#ux">The User Experience</a></li>
+    <li><a href="#extension">Blueprint for Other Integrations</a></li>
+    <li><a href="#tradeoffs">Tradeoffs &amp; Design Decisions</a></li>
+    <li><a href="#limitations">Limitations &amp; Future Work</a></li>
+  </ol>
+</nav>
+
+<!-- ═══════════════════════════════════════ § 1 ═══════════════════════════════════════ -->
+<section id="big-picture">
+  <span class="section-number">01</span>
+  <h2>The Big Picture</h2>
+
+  <p>
+    Polaris has an AI chat system where users converse with an LLM that can call <strong>tools</strong> to read and modify their workspace. This PR extends that system to reach <em>outside</em> the workspace&mdash;into GitHub&mdash;so the AI can list repos, search issues, create issues, and assign work to Copilot, all from within a chat conversation.
+  </p>
+
+  <p>
+    The architecture has four distinct layers, each with a single responsibility:
+  </p>
+
+  <div class="diagram-container">
+    <div class="diagram-label">Architecture Layers</div>
+    <div class="layer-stack">
+      <div class="layer">
+        <div class="layer-label" style="color: var(--accent);">UI Layer</div>
+        <div class="layer-content">
+          <span class="layer-item new">IntegrationsSettingsContent</span>
+          <span class="layer-item new">SettingsDialog (Integrations tab)</span>
+          <span class="layer-item">WorkOS Pipes Widget</span>
+        </div>
+      </div>
+      <div class="layer">
+        <div class="layer-label" style="color: var(--blue);">API Layer</div>
+        <div class="layer-content">
+          <span class="layer-item new">GET /integrations/connections</span>
+          <span class="layer-item">POST /chat/trigger</span>
+        </div>
+      </div>
+      <div class="layer">
+        <div class="layer-label" style="color: var(--green);">Service Layer</div>
+        <div class="layer-content">
+          <span class="layer-item new">ServerIntegrationService</span>
+          <span class="layer-item new">IIntegrationService</span>
+          <span class="layer-item new">githubApi.ts (githubFetch)</span>
+        </div>
+      </div>
+      <div class="layer">
+        <div class="layer-label" style="color: var(--purple);">AI Layer</div>
+        <div class="layer-content">
+          <span class="layer-item new">6 GitHub tools</span>
+          <span class="layer-item new">2 GitHub skills</span>
+          <span class="layer-item">ToolRegistry</span>
+          <span class="layer-item">SkillRegistry</span>
+          <span class="layer-item">StreamingHandler</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p>
+    The key insight: <strong>the AI doesn't know about OAuth, tokens, or WorkOS.</strong> It just calls tools like <code>searchGithubIssues</code> and gets back structured results. All the authentication complexity is hidden behind a single abstraction: <code>IIntegrationService</code>.
+  </p>
+
+  <div class="callout insight">
+    <span class="callout-label">Key Insight</span>
+    This is the <strong>first external integration</strong> in Polaris's AI system. Every prior tool (searchNodes, createNodes, etc.) operated on local workspace data. The GitHub integration establishes the pattern for how <em>all</em> future external services will connect.
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ § 2 ═══════════════════════════════════════ -->
+<section id="oauth">
+  <span class="section-number">02</span>
+  <h2>OAuth &amp; Token Management</h2>
+
+  <p>
+    The hardest part of any third-party integration is authentication. Users need to grant Polaris access to their GitHub account, and the system needs to securely manage access tokens that expire and need refreshing. Polaris delegates all of this to <strong>WorkOS Pipes</strong>.
+  </p>
+
+  <h3>What is WorkOS Pipes?</h3>
+  <p>
+    WorkOS Pipes is an OAuth-as-a-service layer. Instead of implementing GitHub's OAuth flow yourself (redirect URIs, PKCE, token storage, refresh logic, scope management), you tell WorkOS "I need GitHub access for this user" and it handles everything. You get back an access token on demand.
+  </p>
+
+  <h3>The IIntegrationService Interface</h3>
+  <p>
+    Rather than coupling the AI system directly to WorkOS, the PR introduces a clean abstraction:
+  </p>
+
+  <pre><code><span class="file-label">integrations/types.ts</span>
+<span class="keyword">export interface</span> <span class="type">IIntegrationService</span> {
+  <span class="comment">/** Check if a provider is connected for the current user */</span>
+  <span class="fn">isConnected</span>(provider: <span class="type">string</span>): <span class="type">Promise</span>&lt;<span class="type">boolean</span>&gt;;
+
+  <span class="comment">/** Get an access token for a connected provider */</span>
+  <span class="fn">getAccessToken</span>(provider: <span class="type">string</span>): <span class="type">Promise</span>&lt;
+    { token: <span class="type">string</span> } | { error: <span class="type">string</span> }
+  &gt;;
+}</code></pre>
+
+  <p>
+    Two methods. That's the entire contract. The <code>provider</code> parameter is a string like <code>"github"</code> or <code>"slack"</code>&mdash;this makes the interface generic enough to support any future OAuth provider.
+  </p>
+
+  <h3>The Server Implementation</h3>
+  <p>
+    On the server, <code>ServerIntegrationService</code> implements this interface using the WorkOS Node SDK:
+  </p>
+
+  <pre><code><span class="file-label">ServerIntegrationService.ts</span>
+<span class="keyword">export class</span> <span class="type">ServerIntegrationService</span> <span class="keyword">implements</span> <span class="type">IIntegrationService</span> {
+  <span class="keyword">constructor</span>(
+    <span class="keyword">private</span> workos: <span class="type">WorkOS</span>,
+    <span class="keyword">private</span> userId: <span class="type">string</span>,
+    <span class="keyword">private</span> organizationId?: <span class="type">string</span>,
+  ) {}
+
+  <span class="keyword">async</span> <span class="fn">getAccessToken</span>(provider: <span class="type">string</span>) {
+    <span class="keyword">const</span> result = <span class="keyword">await</span> <span class="keyword">this</span>.workos.pipes.<span class="fn">getAccessToken</span>({
+      provider,
+      userId: <span class="keyword">this</span>.userId,
+      organizationId: <span class="keyword">this</span>.organizationId ?? <span class="keyword">null</span>,
+    });
+    <span class="keyword">if</span> (!result.active) {
+      <span class="keyword">return</span> { error: result.error ?? <span class="string">"not_connected"</span> };
+    }
+    <span class="keyword">return</span> { token: result.accessToken.accessToken };
+  }
+}</code></pre>
+
+  <div class="callout pattern">
+    <span class="callout-label">Pattern</span>
+    The service is <strong>scoped to a specific user</strong> at construction time. Each HTTP request creates a new instance with that request's authenticated user. This means the token you get is always for the right user, and there's no risk of leaking tokens between requests.
+  </div>
+
+  <h3>Token Lifecycle</h3>
+
+  <div class="diagram-container">
+    <div class="diagram-label">Token Flow</div>
+    <div class="flow">
+      <div class="flow-row">
+        <div class="flow-box accent">User connects<br>GitHub in Settings</div>
+        <span class="flow-arrow horizontal">&rarr;</span>
+        <div class="flow-box blue">WorkOS Pipes<br>handles OAuth</div>
+        <span class="flow-arrow horizontal">&rarr;</span>
+        <div class="flow-box green">Tokens stored<br>by WorkOS</div>
+      </div>
+      <div class="flow-arrow">&darr; later, during an AI chat &darr;</div>
+      <div class="flow-row">
+        <div class="flow-box purple">AI calls<br>searchGithubIssues</div>
+        <span class="flow-arrow horizontal">&rarr;</span>
+        <div class="flow-box blue">getGithubToken()<br>asks WorkOS</div>
+        <span class="flow-arrow horizontal">&rarr;</span>
+        <div class="flow-box green">Fresh token<br>returned</div>
+        <span class="flow-arrow horizontal">&rarr;</span>
+        <div class="flow-box orange">GitHub API<br>call succeeds</div>
+      </div>
+    </div>
+  </div>
+
+  <p>
+    Tokens are never stored by Polaris. Every tool invocation fetches a fresh token from WorkOS, which handles refresh logic internally. If the user has revoked access or the token is expired beyond recovery, the tool gets back a clear error that it can surface to the user.
+  </p>
+</section>
+
+<!-- ═══════════════════════════════════════ § 3 ═══════════════════════════════════════ -->
+<section id="api-layer">
+  <span class="section-number">03</span>
+  <h2>The GitHub API Layer</h2>
+
+  <p>
+    Every GitHub tool ultimately calls the same function: <code>githubFetch</code>. This is the narrow waist of the entire integration&mdash;a single authenticated HTTP client for the GitHub REST API.
+  </p>
+
+  <pre><code><span class="file-label">githubApi.ts</span>
+<span class="keyword">export async function</span> <span class="fn">githubFetch</span>&lt;T&gt;(
+  getToken: <span class="type">GetGithubToken</span> | <span class="type">undefined</span>,
+  path: <span class="type">string</span>,
+  options: { method?: <span class="type">string</span>; body?: <span class="type">unknown</span> } = {},
+): <span class="type">Promise</span>&lt;{ data: T } | { error: <span class="type">ToolResult</span> }&gt;</code></pre>
+
+  <h3>Three-Stage Error Handling</h3>
+  <p>The function handles three distinct failure modes, each with a user-friendly message:</p>
+
+  <table class="comparison">
+    <thead>
+      <tr>
+        <th>Stage</th>
+        <th>Condition</th>
+        <th>Message to AI</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="label-cell">No Service</td>
+        <td><code>getToken</code> is undefined &mdash; server not configured</td>
+        <td>"GitHub integration is not available. The integration service is not configured on this environment."</td>
+      </tr>
+      <tr>
+        <td class="label-cell">Not Connected</td>
+        <td>User hasn't linked their GitHub account</td>
+        <td>"Please connect your GitHub account in Settings&nbsp;&gt; Integrations"</td>
+      </tr>
+      <tr>
+        <td class="label-cell">API Error</td>
+        <td>GitHub returns a non-200 status</td>
+        <td>Parses GitHub's error JSON and surfaces the <code>message</code> field</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout insight">
+    <span class="callout-label">Design Detail</span>
+    The return type is a <strong>discriminated union</strong>: <code>{ data: T } | { error: ToolResult }</code>. Every caller does <code>if ("error" in result) return result.error</code>. This makes error handling consistent and impossible to forget&mdash;TypeScript won't let you access <code>.data</code> without checking.
+  </div>
+
+  <h3>Security: Input Validation</h3>
+  <p>
+    The <code>repoSchema</code> prevents path injection in GitHub API URLs:
+  </p>
+
+  <pre><code><span class="keyword">export const</span> repoSchema = z.<span class="fn">string</span>().<span class="fn">regex</span>(
+  <span class="string">/^[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+$/</span>,
+  <span class="string">"Must be in owner/repo format"</span>
+);</code></pre>
+
+  <p>
+    Without this, an LLM could potentially construct a <code>repo</code> value like <code>../../admin/secrets</code> that would change the meaning of the API URL. The regex ensures only valid <code>owner/repo</code> strings pass through.
+  </p>
+
+  <h3>Token Scoping: getGithubToken()</h3>
+  <p>
+    Rather than passing the full <code>IIntegrationService</code> to every GitHub function, the PR introduces a scoping function:
+  </p>
+
+  <pre><code><span class="keyword">export function</span> <span class="fn">getGithubToken</span>(context: <span class="type">ToolContext</span>): <span class="type">GetGithubToken</span> | <span class="type">undefined</span> {
+  <span class="keyword">if</span> (!context.integrationService) <span class="keyword">return</span> <span class="keyword">undefined</span>;
+  <span class="keyword">return</span> () => context.integrationService.<span class="fn">getAccessToken</span>(<span class="string">"github"</span>);
+}</code></pre>
+
+  <div class="callout pattern">
+    <span class="callout-label">Pattern: Scoped Token Getters</span>
+    This creates a closure that can <em>only</em> request GitHub tokens. The tool code never sees the raw integration service, so it can't accidentally request tokens for other providers. A Slack integration would have its own <code>getSlackToken()</code> with the same pattern.
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ § 4 ═══════════════════════════════════════ -->
+<section id="tools">
+  <span class="section-number">04</span>
+  <h2>AI Tools: The Six Operations</h2>
+
+  <p>
+    The integration exposes six tools to the LLM. Each follows the exact same <code>PolarisTool</code> interface that all existing Polaris tools use&mdash;the LLM doesn't know or care that these tools call an external API.
+  </p>
+
+  <table class="comparison">
+    <thead>
+      <tr>
+        <th>Tool</th>
+        <th>GitHub API</th>
+        <th>Purpose</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="label-cell">listGithubRepos</td>
+        <td><code>GET /user/repos</code> or <code>/search/repositories</code></td>
+        <td>Show the user's repos, optionally filtered by query</td>
+      </tr>
+      <tr>
+        <td class="label-cell">listGithubLabels</td>
+        <td><code>GET /repos/{owner}/{repo}/labels</code></td>
+        <td>List available labels for intelligent issue tagging</td>
+      </tr>
+      <tr>
+        <td class="label-cell">searchGithubIssues</td>
+        <td><code>GET /search/issues</code></td>
+        <td>Search issues with query, repo, state, label filters</td>
+      </tr>
+      <tr>
+        <td class="label-cell">readGithubIssue</td>
+        <td><code>GET /repos/{o}/{r}/issues/{n}</code> + <code>/comments</code></td>
+        <td>Read a specific issue with all its comments</td>
+      </tr>
+      <tr>
+        <td class="label-cell">createGithubIssue</td>
+        <td><code>POST /repos/{owner}/{repo}/issues</code></td>
+        <td>Create a new issue with title, body, labels, assignees</td>
+      </tr>
+      <tr>
+        <td class="label-cell">updateGithubIssue</td>
+        <td><code>PATCH /repos/{o}/{r}/issues/{n}</code></td>
+        <td>Update issue fields (title, body, state, labels, assignees)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Anatomy of a Tool</h3>
+  <p>Every tool has four components. Here's <code>readGithubIssue</code> as a representative example:</p>
+
+  <pre><code><span class="file-label">readGithubIssue.ts</span>
+<span class="comment">// 1. Input schema — validated by Zod before execution</span>
+<span class="keyword">const</span> inputSchema = z.<span class="fn">object</span>({
+  repo: repoSchema.<span class="fn">describe</span>(<span class="string">"Repository in owner/repo format"</span>),
+  issueNumber: z.<span class="fn">number</span>().<span class="fn">describe</span>(<span class="string">"Issue number to read"</span>),
+});
+
+<span class="comment">// 2. Executor — the actual logic</span>
+<span class="keyword">async function</span> <span class="fn">executor</span>(input, context): <span class="type">Promise</span>&lt;<span class="type">ToolResult</span>&gt; {
+  <span class="keyword">const</span> token = <span class="fn">getGithubToken</span>(context);
+
+  <span class="comment">// Parallel fetch: issue details + comments</span>
+  <span class="keyword">const</span> [issueResult, commentsResult] = <span class="keyword">await</span> Promise.<span class="fn">all</span>([
+    <span class="fn">githubFetch</span>(token, <span class="string">`/repos/${repo}/issues/${issueNumber}`</span>),
+    <span class="fn">githubFetch</span>(token, <span class="string">`/repos/${repo}/issues/${issueNumber}/comments`</span>),
+  ]);
+
+  <span class="keyword">return</span> { success: <span class="keyword">true</span>, message: <span class="string">`Read issue #${issueNumber}`</span>, data: { ... } };
+}
+
+<span class="comment">// 3. Progress messages — shown to user while tool runs</span>
+progressMessages: {
+  inProgress: (p) => <span class="string">`Reading issue #${p.issueNumber} in ${p.repo}`</span>,
+  completed:  (p) => <span class="string">`Read issue #${p.issueNumber}`</span>,
+  failed: <span class="string">"Failed to read issue"</span>,
+}
+
+<span class="comment">// 4. Export as PolarisTool</span>
+<span class="keyword">export const</span> readGithubIssue: <span class="type">PolarisTool</span> = {
+  name, description, inputSchema, executor, progressMessages
+};</code></pre>
+
+  <div class="callout pattern">
+    <span class="callout-label">Pattern: PolarisTool</span>
+    Every tool, whether it queries the local workspace or calls GitHub, conforms to the same shape: a Zod <code>inputSchema</code> for validation, an <code>executor</code> function receiving <code>(input, context)</code>, and optional <code>progressMessages</code> for the UI. This uniformity means the AI system (ToolRegistry, ToolExecutor, StreamingHandler) doesn't need any special handling for integration tools.
+  </div>
+
+  <h3>What the LLM Sees</h3>
+  <p>
+    The Zod schemas are automatically converted to JSON Schema and sent to the LLM as function definitions. The <code>.describe()</code> calls on each field become the parameter descriptions the model reads. For example, the LLM sees something like:
+  </p>
+
+  <pre><code><span class="comment">// What the LLM's tool definition looks like:</span>
+{
+  <span class="string">"name"</span>: <span class="string">"searchGithubIssues"</span>,
+  <span class="string">"description"</span>: <span class="string">"Search GitHub issues across repos or within a specific repo."</span>,
+  <span class="string">"parameters"</span>: {
+    <span class="string">"query"</span>:   { <span class="string">"type"</span>: <span class="string">"string"</span>,  <span class="string">"description"</span>: <span class="string">"Search query for issues"</span> },
+    <span class="string">"repo"</span>:    { <span class="string">"type"</span>: <span class="string">"string"</span>,  <span class="string">"description"</span>: <span class="string">"Repository in owner/repo format"</span> },
+    <span class="string">"state"</span>:   { <span class="string">"enum"</span>: [<span class="string">"open"</span>, <span class="string">"closed"</span>] },
+    <span class="string">"labels"</span>:  { <span class="string">"type"</span>: <span class="string">"array"</span>,  <span class="string">"items"</span>: { <span class="string">"type"</span>: <span class="string">"string"</span> } },
+    <span class="string">"perPage"</span>: { <span class="string">"type"</span>: <span class="string">"number"</span>, <span class="string">"default"</span>: 30, <span class="string">"maximum"</span>: 100 }
+  }
+}</code></pre>
+
+  <p>
+    The model decides when to call these tools based on the user's intent. If a user says "check if there's already a bug report for the login issue", the model will call <code>searchGithubIssues</code> with an appropriate query.
+  </p>
+</section>
+
+<!-- ═══════════════════════════════════════ § 5 ═══════════════════════════════════════ -->
+<section id="skills">
+  <span class="section-number">05</span>
+  <h2>Skills: Compound Workflows</h2>
+
+  <p>
+    Tools are atomic operations. Skills are <strong>multi-step workflows</strong> that orchestrate multiple tools. The PR adds two skills:
+  </p>
+
+  <h3>Create GitHub Issue</h3>
+  <p>
+    When the LLM reads this skill (via the <code>readSkill</code> tool), it gets a detailed playbook:
+  </p>
+
+  <div class="diagram-container">
+    <div class="diagram-label">Skill: Create GitHub Issue — Step Sequence</div>
+    <div class="flow">
+      <div class="flow-row">
+        <div class="flow-box blue">1. listGithubRepos<small>identify target repo</small></div>
+      </div>
+      <div class="flow-arrow">&darr;</div>
+      <div class="flow-row">
+        <div class="flow-box purple">2. searchGithubIssues<small>check for duplicates</small></div>
+      </div>
+      <div class="flow-arrow">&darr; no duplicate found</div>
+      <div class="flow-row">
+        <div class="flow-box orange">3. listGithubLabels<small>pick appropriate labels</small></div>
+      </div>
+      <div class="flow-arrow">&darr;</div>
+      <div class="flow-row">
+        <div class="flow-box green">4. createGithubIssue<small>create with title, body, labels</small></div>
+      </div>
+      <div class="flow-arrow">&darr;</div>
+      <div class="flow-row">
+        <div class="flow-box filled">5. Report back<small>confirm with issue # and link</small></div>
+      </div>
+    </div>
+  </div>
+
+  <p>
+    The skill instructs the AI to <em>always check for duplicates before creating</em>. Without this, an eager LLM might create duplicate issues every time.
+  </p>
+
+  <h3>Send to Copilot</h3>
+  <p>
+    This skill assigns an existing issue to <code>copilot-swe-agent</code> (GitHub's AI coding agent). The workflow:
+  </p>
+  <ol>
+    <li>Find the issue (via <code>searchGithubIssues</code> if needed)</li>
+    <li>Verify it's open (via <code>readGithubIssue</code>)</li>
+    <li>Assign <code>copilot-swe-agent</code> (via <code>updateGithubIssue</code>)</li>
+    <li>Confirm the assignment</li>
+  </ol>
+
+  <div class="callout insight">
+    <span class="callout-label">Tools vs. Skills</span>
+    <strong>Tools</strong> are functions the AI can call directly. <strong>Skills</strong> are prompt-based instructions that teach the AI how to use multiple tools together for a complex task. Skills are registered in the <code>SkillRegistry</code> and the AI loads them on-demand via the <code>readSkill</code> tool when a user's request matches a skill description. This is an "inner monologue" pattern: the AI reads the skill, then follows its steps.
+  </div>
+
+  <h3>How Skills are Surfaced</h3>
+  <p>
+    The system prompt includes an "Available Skills" section listing all registered skills with their titles and descriptions. When the AI recognizes a user request that matches a skill, it calls <code>readSkill</code> to load the full instructions. The skill body is injected into the conversation as a tool result, and the AI follows it step-by-step.
+  </p>
+</section>
+
+<!-- ═══════════════════════════════════════ § 6 ═══════════════════════════════════════ -->
+<section id="wiring">
+  <span class="section-number">06</span>
+  <h2>Wiring It All Together</h2>
+
+  <p>
+    The most instructive part of this PR is how the <code>integrationService</code> is threaded from an HTTP request all the way down to a tool execution. Let's trace the full path:
+  </p>
+
+  <div class="diagram-container">
+    <div class="diagram-label">Request → Tool Execution Pipeline</div>
+    <div class="flow">
+      <div class="flow-row">
+        <div class="flow-box filled">POST /chat/trigger<small>Fastify route handler</small></div>
+      </div>
+      <div class="flow-note">constructs ServerIntegrationService from request.auth</div>
+      <div class="flow-arrow">&darr;</div>
+      <div class="flow-row">
+        <div class="flow-box accent">triggerAI()<small>services/api-general/src/lib/aiTrigger.ts</small></div>
+      </div>
+      <div class="flow-note">passes integrationService into streamChat options</div>
+      <div class="flow-arrow">&darr;</div>
+      <div class="flow-row">
+        <div class="flow-box blue">StreamingHandler.streamChat()<small>packages/ai-streaming/src/StreamingHandler.ts</small></div>
+      </div>
+      <div class="flow-note">passes integrationService into ToolExecutor.initialize()</div>
+      <div class="flow-arrow">&darr;</div>
+      <div class="flow-row">
+        <div class="flow-box purple">ToolExecutor.initialize()<small>stores integrationService in ToolContext</small></div>
+      </div>
+      <div class="flow-note">context.integrationService available to all tools</div>
+      <div class="flow-arrow">&darr;</div>
+      <div class="flow-row">
+        <div class="flow-box green">searchGithubIssues.executor()<small>getGithubToken(context) → githubFetch()</small></div>
+      </div>
+    </div>
+  </div>
+
+  <h3>The Threading in Code</h3>
+  <p>Each hop is a single line of code. Here are the key connection points:</p>
+
+  <h4>1. Route creates the service</h4>
+  <pre><code><span class="file-label">routes/chat.ts</span>
+<span class="keyword">const</span> integrationService = <span class="keyword">new</span> <span class="type">ServerIntegrationService</span>(
+  <span class="fn">getWorkOS</span>(),
+  request.auth.userId,
+  request.auth.organizationId,
+);
+
+<span class="keyword">const</span> result = <span class="keyword">await</span> <span class="fn">triggerAI</span>({ ..., integrationService });</code></pre>
+
+  <h4>2. triggerAI passes it to StreamingHandler</h4>
+  <pre><code><span class="file-label">lib/aiTrigger.ts</span>
+<span class="keyword">const</span> stream = streamingHandler.<span class="fn">streamChat</span>({
+  ...,
+  integrationService,  <span class="comment">// passed through</span>
+});</code></pre>
+
+  <h4>3. StreamingHandler injects it into ToolExecutor</h4>
+  <pre><code><span class="file-label">StreamingHandler.ts</span>
+<span class="keyword">await</span> toolExecutor.<span class="fn">initialize</span>({
+  ...,
+  integrationService,  <span class="comment">// stored in context</span>
+});</code></pre>
+
+  <h4>4. Tool reads it from context</h4>
+  <pre><code><span class="file-label">searchGithubIssues.ts</span>
+<span class="keyword">const</span> token = <span class="fn">getGithubToken</span>(context);
+<span class="comment">// getGithubToken extracts context.integrationService</span>
+<span class="comment">// and returns a scoped () => getAccessToken("github")</span></code></pre>
+
+  <h3>Registration</h3>
+  <p>The tools and skills are registered at startup, not per-request:</p>
+
+  <pre><code><span class="file-label">ToolRegistry.ts</span>
+<span class="keyword">import</span> {
+  listGithubRepos, listGithubLabels,
+  searchGithubIssues, readGithubIssue,
+  createGithubIssue, updateGithubIssue,
+} <span class="keyword">from</span> <span class="string">"./integrations/github/index.js"</span>;
+
+<span class="comment">// Added to the default tools list and the "general" agent's tool list</span></code></pre>
+
+  <pre><code><span class="file-label">skills/index.ts</span>
+<span class="keyword">import</span> { createGithubIssueSkill, sendToCopilotSkill } <span class="keyword">from</span> <span class="string">"../integrations/github/skills.js"</span>;
+
+<span class="comment">// Registered in SkillRegistry.registerDefaultSkills()</span></code></pre>
+
+  <div class="callout warning">
+    <span class="callout-label">Note</span>
+    The tools are registered for <em>all</em> agents (currently just the "general" agent). If a user hasn't connected GitHub, the tools still appear in the LLM's tool list but will return helpful error messages when invoked. This avoids dynamic tool registration complexity.
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ § 7 ═══════════════════════════════════════ -->
+<section id="ux">
+  <span class="section-number">07</span>
+  <h2>The User Experience</h2>
+
+  <h3>Settings: Connecting GitHub</h3>
+  <p>
+    A new <strong>Integrations</strong> tab appears in the Settings dialog, positioned between "Calendars" and "Advanced". The page shows:
+  </p>
+  <ul>
+    <li>A header with "GitHub" and a connection status badge (green "Connected" / gray "Not connected")</li>
+    <li>A description: "Connect your GitHub account to list repositories, search and manage issues, and send tasks to GitHub Copilot directly from chat."</li>
+    <li>The WorkOS Pipes widget, which handles the OAuth flow inline</li>
+  </ul>
+
+  <p>
+    The connection status is checked via a new <code>GET /integrations/connections</code> endpoint that returns the status of all known providers. This endpoint checks WorkOS for each provider in parallel.
+  </p>
+
+  <div class="diagram-container">
+    <div class="diagram-label">Settings UI Flow</div>
+    <div class="flow">
+      <div class="flow-row">
+        <div class="flow-box filled">Settings &rarr; Integrations</div>
+      </div>
+      <div class="flow-arrow">&darr;</div>
+      <div class="flow-row">
+        <div class="flow-box blue">GET /integrations/connections<small>checks WorkOS for each provider</small></div>
+      </div>
+      <div class="flow-arrow">&darr;</div>
+      <div class="flow-row">
+        <div class="flow-box accent">Shows status badge<small>"Connected" or "Not connected"</small></div>
+        <div class="flow-box green">Pipes widget<small>OAuth connect/disconnect</small></div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Chat: Using GitHub Tools</h3>
+  <p>Once connected, users interact naturally in chat:</p>
+  <ul>
+    <li><em>"Show me my recent repos"</em> &rarr; AI calls <code>listGithubRepos</code></li>
+    <li><em>"Search for login bugs in acme/frontend"</em> &rarr; AI calls <code>searchGithubIssues</code></li>
+    <li><em>"File a bug for the crash on the settings page"</em> &rarr; AI reads the "Create GitHub issue" skill and follows the multi-step workflow</li>
+    <li><em>"Assign that issue to Copilot"</em> &rarr; AI reads the "Send to Copilot" skill</li>
+  </ul>
+
+  <p>
+    The progress messages give real-time feedback: "Searching issues in acme/frontend&hellip;" &rarr; "Found 12 issues".
+  </p>
+
+  <h3>Graceful Degradation</h3>
+  <p>
+    If GitHub isn't connected and the user asks to search issues, the AI gets back a clear error: "Please connect your GitHub account in Settings > Integrations." The AI relays this to the user with a direct pointer to where to set it up.
+  </p>
+</section>
+
+<!-- ═══════════════════════════════════════ § 8 ═══════════════════════════════════════ -->
+<section id="extension">
+  <span class="section-number">08</span>
+  <h2>Blueprint for Other Integrations</h2>
+
+  <p>
+    The GitHub integration establishes a clear recipe. Here's what you'd do to add, say, a <strong>Linear</strong> or <strong>Jira</strong> integration:
+  </p>
+
+  <h3>Step-by-Step Recipe</h3>
+
+  <h4>1. Define the integration</h4>
+  <pre><code><span class="file-label">integrations/linear/index.ts</span>
+<span class="keyword">export const</span> linearIntegration: <span class="type">Integration</span> = {
+  id: <span class="string">"linear"</span>,
+  name: <span class="string">"Linear"</span>,
+  provider: <span class="string">"linear"</span>,          <span class="comment">// WorkOS Pipes provider name</span>
+  tools: [<span class="string">"searchLinearIssues"</span>, <span class="string">"createLinearIssue"</span>, ...],
+  skills: [<span class="string">"Triage Linear issue"</span>],
+};</code></pre>
+
+  <h4>2. Build the API client</h4>
+  <pre><code><span class="file-label">integrations/linear/linearApi.ts</span>
+<span class="comment">// Same pattern as githubApi.ts:</span>
+<span class="comment">// - getLinearToken() scoped token getter</span>
+<span class="comment">// - linearFetch() authenticated HTTP client</span>
+<span class="comment">// - Input validation schemas</span></code></pre>
+
+  <h4>3. Create tools</h4>
+  <pre><code><span class="comment">// Each tool: inputSchema + executor + progressMessages</span>
+<span class="comment">// They call linearFetch() and return ToolResult</span></code></pre>
+
+  <h4>4. Register in ToolRegistry and SkillRegistry</h4>
+  <pre><code><span class="comment">// Add imports and register in registerDefaultTools()</span>
+<span class="comment">// Add to the "general" agent's tool list</span></code></pre>
+
+  <h4>5. Add provider to the connections endpoint</h4>
+  <pre><code><span class="file-label">routes/integrations.ts</span>
+<span class="keyword">const</span> KNOWN_PROVIDERS = [
+  { provider: <span class="string">"github"</span>, name: <span class="string">"GitHub"</span> },
+  { provider: <span class="string">"linear"</span>, name: <span class="string">"Linear"</span> },  <span class="comment">// add here</span>
+];</code></pre>
+
+  <h4>6. Add UI section in IntegrationsSettingsContent</h4>
+  <pre><code><span class="comment">// Duplicate the GitHub ContentSection pattern</span>
+<span class="comment">// with provider-specific description and status badge</span></code></pre>
+
+  <div class="callout pattern">
+    <span class="callout-label">What Stays The Same</span>
+    You don't touch <code>IIntegrationService</code>, <code>ServerIntegrationService</code>, <code>ToolExecutor</code>, <code>StreamingHandler</code>, or the <code>/chat/trigger</code> route. The entire infrastructure layer is integration-agnostic. You just add new tools and register them.
+  </div>
+
+  <h3>The Integration Type</h3>
+  <p>
+    The <code>Integration</code> type is a metadata descriptor, not a runtime construct. It exists to document what an integration provides:
+  </p>
+  <pre><code><span class="keyword">export interface</span> <span class="type">Integration</span> {
+  id: <span class="type">string</span>;       <span class="comment">// "github"</span>
+  name: <span class="type">string</span>;     <span class="comment">// "GitHub"</span>
+  provider: <span class="type">string</span>; <span class="comment">// WorkOS provider name</span>
+  tools: <span class="type">string</span>[];  <span class="comment">// tool names this integration provides</span>
+  skills: <span class="type">string</span>[]; <span class="comment">// skill titles this integration provides</span>
+}</code></pre>
+
+  <p>
+    This could be used in the future for dynamic tool registration (only show GitHub tools if GitHub is connected), per-integration settings pages, or auditing which integration each tool belongs to.
+  </p>
+</section>
+
+<!-- ═══════════════════════════════════════ § 9 ═══════════════════════════════════════ -->
+<section id="tradeoffs">
+  <span class="section-number">09</span>
+  <h2>Tradeoffs &amp; Design Decisions</h2>
+
+  <h3>Static vs. Dynamic Tool Registration</h3>
+  <table class="comparison">
+    <thead>
+      <tr>
+        <th>Approach</th>
+        <th>Pros</th>
+        <th>Cons</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="label-cell">Static (chosen)</td>
+        <td>Simple, predictable. Tools always registered. Error messages guide users to connect.</td>
+        <td>LLM sees tools it might not be able to use. Wastes context window tokens on tool definitions.</td>
+      </tr>
+      <tr>
+        <td class="label-cell">Dynamic</td>
+        <td>LLM only sees tools it can actually use. Cleaner tool list.</td>
+        <td>Requires per-request tool registration. Adds latency (check connection status before building tool list). More complex caching.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout tradeoff">
+    <span class="callout-label">Tradeoff Analysis</span>
+    Static registration was the right call for a first integration. With 6 GitHub tools added to ~14 existing tools, the overhead is minimal. If Polaris grows to support 10+ integrations each with 5-10 tools, the LLM would receive 50-100 tool definitions&mdash;at that point, dynamic registration (or at least per-integration enable/disable) would become important.
+  </div>
+
+  <h3>WorkOS Pipes vs. Custom OAuth</h3>
+  <table class="comparison">
+    <thead>
+      <tr>
+        <th>Approach</th>
+        <th>Pros</th>
+        <th>Cons</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="label-cell">WorkOS Pipes (chosen)</td>
+        <td>Zero OAuth implementation code. Token refresh handled automatically. Pre-built UI widget. Already in Polaris (used for calendars).</td>
+        <td>Vendor dependency. Less control over scopes. Additional cost per provider. Abstraction over GitHub's API.</td>
+      </tr>
+      <tr>
+        <td class="label-cell">Custom OAuth</td>
+        <td>Full control. No vendor cost. Custom scopes.</td>
+        <td>Significant implementation effort (redirect handling, token storage, encryption, refresh logic, revocation). Security surface area.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>No Token Caching</h3>
+  <p>
+    Every tool call fetches a fresh token from WorkOS. This means an AI workflow that calls 4 GitHub tools makes 4 separate WorkOS API calls. The alternative would be caching the token for the duration of the request/session.
+  </p>
+
+  <div class="callout tradeoff">
+    <span class="callout-label">Why No Caching</span>
+    Simplicity wins here. WorkOS likely has its own internal cache. The added latency of a WorkOS roundtrip per tool call is negligible compared to the GitHub API call itself and the LLM inference time. Caching would require managing token expiry and invalidation&mdash;complexity that isn't justified by the current usage patterns.
+  </div>
+
+  <h3>GitHub REST API vs. GraphQL</h3>
+  <p>
+    The implementation uses GitHub's REST API v3 (via <code>api.github.com</code>) rather than the GraphQL v4 API. REST is simpler to wrap in individual tools (one endpoint per operation), while GraphQL would allow fetching related data in fewer requests but adds complexity in query construction.
+  </p>
+
+  <h3>All Tools on One Agent</h3>
+  <p>
+    All GitHub tools are added to the "general" agent. An alternative would be a dedicated "GitHub agent" that only appears when GitHub is connected. The current approach is simpler and leverages the LLM's ability to decide when to use each tool.
+  </p>
+</section>
+
+<!-- ═══════════════════════════════════════ § 10 ═══════════════════════════════════════ -->
+<section id="limitations">
+  <span class="section-number">10</span>
+  <h2>Limitations &amp; Future Work</h2>
+
+  <h3>Current Limitations</h3>
+  <ul>
+    <li><strong>Issues only.</strong> No PR support (create/review/merge), no file operations (read/write), no Actions/Workflows, no Discussions, no Projects (v2). These are all natural extensions using the same pattern.</li>
+    <li><strong>No pagination.</strong> Tools return the first page of results (up to 100 items via <code>perPage</code>). For repos with thousands of issues, this limits discoverability.</li>
+    <li><strong>No webhooks.</strong> Polaris can only <em>pull</em> data from GitHub. It can't <em>react</em> to GitHub events (new issues, PR reviews, etc.) in real-time. This would require a webhook receiver and event routing system.</li>
+    <li><strong>Read-only comments.</strong> <code>readGithubIssue</code> fetches comments but there's no tool to <em>post</em> comments.</li>
+    <li><strong>No org-level management.</strong> Connection is per-user, not per-organization. If a team shares a Polaris workspace, each member must connect their own GitHub account.</li>
+    <li><strong>Static tool presence.</strong> GitHub tools show up in the LLM's tool list even for users who haven't connected GitHub, using tokens for tool definitions that won't be useful.</li>
+  </ul>
+
+  <h3>Natural Extensions</h3>
+  <ul>
+    <li><strong>Pull request tools:</strong> <code>createPullRequest</code>, <code>listPullRequests</code>, <code>reviewPullRequest</code>, <code>mergePullRequest</code></li>
+    <li><strong>Comment tools:</strong> <code>commentOnIssue</code>, <code>commentOnPullRequest</code></li>
+    <li><strong>File tools:</strong> <code>readGithubFile</code>, <code>listGithubDirectory</code> for browsing repo contents</li>
+    <li><strong>Other integrations:</strong> Linear, Jira, Slack, Notion&mdash;all following the same recipe from Section 8</li>
+    <li><strong>Dynamic tools:</strong> Only send integration tools to the LLM when the user has connected that integration</li>
+    <li><strong>Webhook support:</strong> React to GitHub events (new issues, PR reviews) and surface them in Polaris</li>
+    <li><strong>Two-way linking:</strong> When creating a GitHub issue from Polaris, store a backlink in the Polaris workspace so the node links to the issue</li>
+  </ul>
+
+  <div class="callout insight">
+    <span class="callout-label">The Bigger Picture</span>
+    This PR transforms Polaris's AI from a workspace-internal system to an <strong>externally-connected agent</strong>. The infrastructure it establishes&mdash;<code>IIntegrationService</code>, scoped token getters, the integration metadata type, the tools-and-skills pattern&mdash;is designed to scale to many integrations. The architectural investment is front-loaded; adding the next integration will be significantly simpler.
+  </div>
+</section>
+
+<hr>
+
+<!-- ═══════════════════════════════════════ FILE MAP ═══════════════════════════════════════ -->
+<section>
+  <h2>Appendix: File Map</h2>
+  <p>All new and modified files in this PR related to the GitHub integration:</p>
+
+  <div class="file-tree">
+    <div class="dir">packages/ai-streaming/src/</div>
+    <div class="indent new-file">integrations/types.ts &mdash; IIntegrationService, Integration</div>
+    <div class="indent new-file">integrations/github/index.ts &mdash; barrel export + githubIntegration</div>
+    <div class="indent new-file">integrations/github/githubApi.ts &mdash; githubFetch, getGithubToken, repoSchema</div>
+    <div class="indent new-file">integrations/github/listGithubRepos.ts</div>
+    <div class="indent new-file">integrations/github/listGithubLabels.ts</div>
+    <div class="indent new-file">integrations/github/searchGithubIssues.ts</div>
+    <div class="indent new-file">integrations/github/readGithubIssue.ts</div>
+    <div class="indent new-file">integrations/github/createGithubIssue.ts</div>
+    <div class="indent new-file">integrations/github/updateGithubIssue.ts</div>
+    <div class="indent new-file">integrations/github/skills.ts &mdash; createGithubIssueSkill, sendToCopilotSkill</div>
+    <div class="indent file">index.ts &mdash; re-exports integration types and GitHub tools</div>
+    <div class="indent file">types.ts &mdash; added integrationService to ToolContext + StreamOptions</div>
+    <div class="indent file">ToolRegistry.ts &mdash; registers 6 GitHub tools + agent config</div>
+    <div class="indent file">ToolExecutor.ts &mdash; threads integrationService through initialize()</div>
+    <div class="indent file">StreamingHandler.ts &mdash; passes integrationService to ToolExecutor</div>
+    <div class="indent file">skills/index.ts &mdash; registers GitHub skills</div>
+    <br>
+    <div class="dir">services/api-general/src/</div>
+    <div class="indent new-file">lib/ServerIntegrationService.ts &mdash; WorkOS-backed implementation</div>
+    <div class="indent new-file">routes/integrations.ts &mdash; GET /integrations/connections</div>
+    <div class="indent file">routes/chat.ts &mdash; creates ServerIntegrationService per request</div>
+    <div class="indent file">lib/aiTrigger.ts &mdash; passes integrationService through</div>
+    <div class="indent file">index.ts &mdash; registers integration routes</div>
+    <br>
+    <div class="dir">apps/web/src/</div>
+    <div class="indent new-file">IntegrationsSettingsContent.tsx &mdash; settings page with Pipes widget</div>
+    <div class="indent file">SettingsDialog.tsx &mdash; adds Integrations nav item</div>
+    <div class="indent file">config.ts &mdash; adds INTEGRATIONS_CONNECTIONS_ENDPOINT</div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ FOOTER ═══════════════════════════════════════ -->
+<footer class="page-footer">
+  <p>
+    Generated from PR #1615 on branch eh/github-integration.
+    This walkthrough covers the architectural patterns; for the full diff, see the pull request.
+  </p>
+</footer>
+
+</div>
+</body>
+</html>

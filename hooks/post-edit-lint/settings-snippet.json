@@ -1,0 +1,10 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|MultiEdit|Write",
+        "command": ".claude/hooks/post-edit-lint.sh"
+      }
+    ]
+  }
+}
