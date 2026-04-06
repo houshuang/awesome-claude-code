@@ -19,19 +19,17 @@ Reference guide for integrating `claude -p` as a programmatic LLM backend in Pyt
 
 **Key difference:** `claude -p` uses your existing Max plan subscription (free LLM calls). Both Direct API and Agent SDK require `ANTHROPIC_API_KEY` and bill per-token. If you have a Max plan, `claude -p` is the most cost-effective programmatic interface by far.
 
-## CRITICAL: `--bare` Bypasses Max Plan Auth
+## CRITICAL: Never Use `--bare` (Breaks Max Plan OAuth)
 
-Anthropic now recommends `--bare` as the default for scripted calls, and it will become the default for `-p` in a future release. However, **for Max plan users this has major cost implications:**
-
-`--bare` skips auto-discovery of hooks, skills, plugins, MCP servers, auto memory, and CLAUDE.md. It also skips OAuth/keychain discovery, meaning:
-- **Requires `ANTHROPIC_API_KEY` env var** (or `apiKeyHelper` via `--settings`) — uses paid API, NOT free Max plan
+`--bare` skips OAuth/keychain discovery. This means:
+- **Requires `ANTHROPIC_API_KEY` env var** — uses paid API, NOT free Max plan
 - Without a key, `--bare` fails with "Not logged in"
 - **On servers using `claude setup-token` for free Max plan**: `--bare` either fails or costs money
-- **Benchmarked savings**: 3.2s (45%) per call — significant but has cost implications
 
-**Use `--bare` when**: local dev with API key, CI/CD with API key, or cost is acceptable.
-**Don't use `--bare` when**: server relies on Max plan auth for free usage (the common case for this skill).
-**Free alternative**: `--effort low` saves ~25% latency with no auth changes.
+Anthropic plans to make `--bare` the default for `-p` in a future release. **When that happens, we will need to explicitly opt out** (likely via a flag like `--no-bare` or equivalent) to preserve Max plan OAuth. Watch the changelog.
+
+**Never use `--bare`** in any of our projects — we rely on Max plan auth for free usage everywhere (alif, petrarca, otak, ralph-bot, etc.).
+**For latency**: use `--effort low` instead (~25% faster, no auth changes).
 
 ## Essential Flags
 
@@ -44,10 +42,11 @@ claude -p \
   --model haiku                     # Choose: haiku/sonnet/opus
 ```
 
-### For paid API scripted calls (faster)
+### For paid API scripted calls (with ANTHROPIC_API_KEY)
 ```bash
+# NOTE: If using Max plan auth (free), DO NOT add --bare — it breaks OAuth.
+# --bare is only safe with an explicit ANTHROPIC_API_KEY.
 claude -p \
-  --bare \                          # Skip CLAUDE.md, hooks, MCP, plugins (~3s faster)
   --output-format json \
   --no-session-persistence \
   --tools "" \
@@ -78,7 +77,7 @@ claude -p \
 ### Key flags reference
 | Flag | Purpose | When to use |
 |---|---|---|
-| `--bare` | Skip auto-discovery (needs API key) | Paid API scripts, CI/CD |
+| `--bare` | Skip auto-discovery (**breaks OAuth — never use with Max plan**) | Only with explicit API key |
 | `--effort` | Reasoning depth: `low`/`medium`/`high`/`max` | `low` for simple tasks (25% faster) |
 | `--json-schema` | Constrained structured output | When you need reliable JSON |
 | `--tools ""` | Disable all tools (`"default"` re-enables all) | Single-turn generation |
@@ -148,7 +147,6 @@ def generate(
     """
     cmd = [
         "claude", "-p",
-        "--bare",
         "--output-format", "json",
         "--no-session-persistence",
         "--model", model,
@@ -232,7 +230,7 @@ def generate_parallel(
         nonlocal next_idx
         task = tasks[idx]
         cmd = [
-            "claude", "-p", "--bare",
+            "claude", "-p",
             "--output-format", "json", "--no-session-persistence",
             "--tools", "", "--model", task.model,
         ]
@@ -394,7 +392,7 @@ result1, meta1 = generate(
 session_id = meta1["session_id"]
 
 # Step 2: fix (resume with full context from step 1)
-cmd = ["claude", "-p", "--bare", "--resume", session_id, ...]
+cmd = ["claude", "-p", "--resume", session_id, ...]
 ```
 
 ### 7. Cost tracking
@@ -422,7 +420,7 @@ def log_call(task_type, model, result, metadata, log_dir="data/logs"):
 
 ## Common Pitfalls
 
-1. **Using `--bare` with Max plan auth** — `--bare` skips OAuth, requires `ANTHROPIC_API_KEY`. Uses paid API instead of free Max plan. Anthropic now recommends `--bare` as default for scripted calls and it will become the `-p` default in a future release — but this only makes sense if you're on paid API. For Max plan users, avoid `--bare` to keep calls free.
+1. **Using `--bare` with Max plan auth** — `--bare` skips OAuth, requires `ANTHROPIC_API_KEY`. Uses paid API instead of free Max plan. **Never use `--bare` in our projects** — we rely on Max plan auth everywhere. When `--bare` becomes the `-p` default in a future release, we'll need to explicitly opt out to preserve OAuth.
 
 2. **Not stripping `CLAUDECODE` env var** — nested invocation from within Claude Code sessions fails or behaves differently. Always strip: `env = {k: v for k, v in os.environ.items() if k != "CLAUDECODE"}`. Found missing in 4 of 6 audited projects.
 
@@ -479,4 +477,4 @@ For batch data processing, content generation, and scripted workflows where Max 
 5. **Add `--max-turns` and `--max-budget-usd`** for tool-enabled sessions
 6. **Log calls** with task_type to JSONL for monitoring
 7. **Test on server**: Claude CLI must be installed + authenticated (`claude setup-token`)
-8. **Consider `--bare`** only if using API key (not Max plan auth)
+8. **Never use `--bare`** — our projects all rely on Max plan OAuth
