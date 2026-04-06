@@ -1,6 +1,6 @@
 # Awesome Claude Code
 
-A curated collection of **26 production-tested** Claude Code skills, hooks, commands, agents, and patterns — developed across 7,500+ Claude Code sessions.
+A curated collection of **29 production-tested** Claude Code skills, hooks, commands, agents, and patterns — developed across 7,500+ Claude Code sessions.
 
 These aren't toy examples. Every item here has been used daily in real projects (React/TypeScript apps, Python backends, mobile apps) and refined over months of heavy Claude Code usage.
 
@@ -47,11 +47,14 @@ cp hooks/prevent-main-commit/prevent-main-commit.sh .claude/hooks/
 | 19 | [codebase-locator](agents/codebase-locator/) | Agent | "Where is X?" super-search across the codebase |
 | 20 | [code-reviewer](agents/code-reviewer/) | Agent | Structured review with severity tiers |
 | 21 | [git-status-line](tools/git-status-line/) | Tool | Rich status line for Claude Code terminal |
-| 22 | [claude-code-python](tools/claude-code-python/) | Tool | Python wrapper for `claude -p` CLI |
-| 23 | [CLAUDE.md Template](patterns/claude-md-template.md) | Pattern | Best practices for structuring CLAUDE.md |
-| 24 | [Discovery Guide](patterns/discovery-guide.md) | Pattern | Making projects Claude-friendly |
-| 25 | [Experiment Log](patterns/experiment-log.md) | Pattern | Append-only change tracking convention |
-| 26 | [Ideas Tracker](patterns/ideas-tracker.md) | Pattern | Living ideas document with status markers |
+| 22 | [claude-api](skills/claude-api/) | Skill | Full guide for `claude -p` as programmatic LLM backend |
+| 23 | [autoresearch](skills/autoresearch/) | Skill | Karpathy-style experiment loops with Optuna |
+| 24 | [calibration-eval](skills/calibration-eval/) | Skill | Human-in-the-loop evaluation page generator |
+| 25 | [knowledge-probe](skills/knowledge-probe/) | Skill | Adaptive knowledge mapping with Bayesian inference |
+| 26 | [CLAUDE.md Template](patterns/claude-md-template.md) | Pattern | Best practices for structuring CLAUDE.md |
+| 27 | [Discovery Guide](patterns/discovery-guide.md) | Pattern | Making projects Claude-friendly |
+| 28 | [Experiment Log](patterns/experiment-log.md) | Pattern | Append-only change tracking convention |
+| 29 | [Ideas Tracker](patterns/ideas-tracker.md) | Pattern | Living ideas document with status markers |
 
 ## Categories
 
@@ -74,6 +77,10 @@ Skills are prompt files that teach Claude Code specific capabilities. They're in
 - **[useeffect-review](skills/useeffect-review/)** — Audits React useEffect usage. Finds unnecessary effects, missing dependencies, and suggests improvements.
 - **[playwright-e2e](skills/playwright-e2e/)** — Best practices for writing Playwright E2E tests with smart selectors and error handling.
 - **[readme-writer](skills/readme-writer/)** — Writes READMEs with a philosophy-first approach. Focuses on the "why" before the "how".
+- **[claude-api](skills/claude-api/)** — Full reference for using `claude -p` as a programmatic LLM backend. Covers Max plan vs API key tradeoffs, essential flags, Python wrapper, structured output, and Agent SDK comparison.
+- **[autoresearch](skills/autoresearch/)** — Automated experiment loops in two modes: grid (Optuna TPE parameter sweeps) and creative (Karpathy-style LLM-proposed changes). Measures a scalar metric, commits winners, reverts losers.
+- **[calibration-eval](skills/calibration-eval/)** — Generates interactive HTML evaluation pages for collecting human ground-truth judgments. Supports rating, A/B comparison, threshold calibration, and extraction recall. Depends on [limbic](https://github.com/houshuang/limbic).
+- **[knowledge-probe](skills/knowledge-probe/)** — Adaptive knowledge mapping via interactive HTML assessment with Bayesian belief propagation. Generates personalized explainers based on what the user knows. Depends on [limbic](https://github.com/houshuang/limbic).
 
 ### Commands
 
@@ -100,7 +107,6 @@ Agent definitions for `.claude/agents/`. These are specialized Claude Code insta
 Standalone scripts and utilities.
 
 - **[git-status-line](tools/git-status-line/)** — Rich status line showing branch, changes, and project info in Claude Code.
-- **[claude-code-python](tools/claude-code-python/)** — Python wrapper for calling `claude -p` CLI programmatically.
 
 ### Patterns
 
