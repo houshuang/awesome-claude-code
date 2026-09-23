@@ -124,7 +124,6 @@ Documented conventions (not installable files) for organizing AI-friendly projec
 
 Newer skills live in their own repositories:
 
-- **[compound-review](https://github.com/houshuang/compound-review)** — A multi-model code-review panel: independent Claude and Codex reviewers, reconciled into one verdict, with a bounded fix and re-review loop.
 - **[limbic skills](https://github.com/houshuang/limbic/tree/main/skills)** — Skills for running larger agent jobs:
   - **packet-worker** — apply a codebook or extract structured records across many documents with stateless, budgeted model calls
   - **thin-worker-brief** — brief subagents so they don't spend tokens rediscovering the project
