@@ -1,5 +1,5 @@
 ---
-allowed-tools: Task, Read, Grep, Glob, LS, Edit, MultiEdit, Write, Bash(npm:*), Bash(npx:*), Bash(pnpm:*), Bash(yarn:*), Bash(make:*), Bash(git:*)
+allowed-tools: Agent, Read, Grep, Glob, Edit, Write, Bash(npm *), Bash(npx *), Bash(pnpm *), Bash(yarn *), Bash(make *), Bash(git *)
 argument-hint: [feedback]
 description: Analyzes review feedback for validity and implements fixes if warranted
 model: opus

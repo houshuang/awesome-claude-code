@@ -7,10 +7,20 @@ Run systematic or creative experiment loops to optimize code, algorithms, or pro
 
 Based on the Karpathy autoresearch pattern (700 experiments in 48 hours) combined with Bayesian optimization best practices.
 
-## Install
+## Installation
+
+**As a plugin:**
+
+```
+/plugin marketplace add houshuang/awesome-claude-code
+/plugin install autoresearch@awesome-claude-code
+```
+
+**Or copy the folder** (from the repo root):
 
 ```bash
-cp -r skills/autoresearch ~/.claude/skills/
+cp -r skills/autoresearch ~/.claude/skills/   # all your projects
+cp -r skills/autoresearch .claude/skills/     # this project only
 ```
 
 ## Note

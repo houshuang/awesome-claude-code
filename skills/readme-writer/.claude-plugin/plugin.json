@@ -1,0 +1,13 @@
+{
+  "name": "readme-writer",
+  "description": "Writes READMEs that explain architecture and design decisions rather than restating types.",
+  "author": {
+    "name": "Stian Håklev",
+    "url": "https://github.com/houshuang"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/houshuang/awesome-claude-code",
+  "skills": [
+    "./"
+  ]
+}

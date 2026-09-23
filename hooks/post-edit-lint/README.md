@@ -10,6 +10,15 @@ Note: Typecheck is intentionally **not** run per-edit because intermediate state
 
 ## Installation
 
+**As a plugin** (recommended):
+
+```
+/plugin marketplace add houshuang/awesome-claude-code
+/plugin install post-edit-lint@awesome-claude-code
+```
+
+**Or copy it into one project:**
+
 1. Copy the script to your project:
    ```bash
    mkdir -p .claude/hooks
@@ -17,14 +26,19 @@ Note: Typecheck is intentionally **not** run per-edit because intermediate state
    chmod +x .claude/hooks/post-edit-lint.sh
    ```
 
-2. Add the hook config to `.claude/settings.json` or `.claude/settings.local.json`:
+2. Add the hook config (also in `settings-snippet.json`) to `.claude/settings.json` or `.claude/settings.local.json`:
    ```json
    {
      "hooks": {
        "PostToolUse": [
          {
-           "matcher": "Edit|MultiEdit|Write",
-           "command": ".claude/hooks/post-edit-lint.sh"
+           "matcher": "Edit|Write",
+           "hooks": [
+             {
+               "type": "command",
+               "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/post-edit-lint.sh"
+             }
+           ]
          }
        ]
      }
@@ -63,4 +77,4 @@ export LINT_FILE_PATTERN="\.(py)$"
 
 ## How it works
 
-Runs as a `PostToolUse` hook after Edit, MultiEdit, and Write operations. Uses `CLAUDE_FILE_PATH` (set by Claude Code) to know which file was just edited, checks it against the file pattern and skip pattern, then runs the configured linter. Non-zero exit from the linter surfaces the errors to Claude Code.
+Runs as a `PostToolUse` hook after `Edit` and `Write`. Claude Code sends the event as JSON on stdin; the script reads the edited file from `tool_input.file_path`, checks it against the file pattern and skip pattern, then runs the configured linter. When the linter fails, the hook prints the diagnostics to stderr and exits with code 2, which is how a `PostToolUse` hook hands feedback back to Claude. Requires `jq`.

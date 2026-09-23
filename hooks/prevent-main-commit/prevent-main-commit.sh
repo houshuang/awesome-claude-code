@@ -1,6 +1,9 @@
 #!/bin/bash
-# Prevents Claude Code from committing directly to the main branch.
+# Prevents Claude Code from committing directly to protected branches.
 # This only affects Claude Code — regular git usage is unaffected.
+#
+# Configuration:
+#   PROTECTED_BRANCHES - space-separated branch names (default: "main master")
 
 INPUT=$(cat)
 COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty')
@@ -17,15 +20,19 @@ if echo "$COMMAND" | grep -qE 'git (checkout -b|switch -c)'; then
 fi
 
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+PROTECTED_BRANCHES="${PROTECTED_BRANCHES:-main master}"
 
-if [ "$CURRENT_BRANCH" = "main" ]; then
-  jq -n '{
-    hookSpecificOutput: {
-      hookEventName: "PreToolUse",
-      permissionDecision: "deny",
-      permissionDecisionReason: "Cannot commit directly to main. Create a feature branch first."
-    }
-  }'
-else
-  exit 0
-fi
+for branch in $PROTECTED_BRANCHES; do
+  if [ "$CURRENT_BRANCH" = "$branch" ]; then
+    jq -n --arg branch "$branch" '{
+      hookSpecificOutput: {
+        hookEventName: "PreToolUse",
+        permissionDecision: "deny",
+        permissionDecisionReason: "Cannot commit directly to \($branch). Create a feature branch first."
+      }
+    }'
+    exit 0
+  fi
+done
+
+exit 0

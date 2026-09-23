@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash(git:*), Read, Grep, Glob, LS
+allowed-tools: Bash(git *), Read, Grep, Glob
 argument-hint: [none]
 description: Reviews the code changes in the current checked-out branch
 model: opus

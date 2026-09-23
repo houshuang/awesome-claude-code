@@ -1,0 +1,13 @@
+{
+  "name": "visual-explainer",
+  "description": "Generates self-contained HTML diagrams, tables and visual explanations (by nicobailon).",
+  "author": {
+    "name": "Stian Håklev",
+    "url": "https://github.com/houshuang"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/houshuang/awesome-claude-code",
+  "skills": [
+    "./"
+  ]
+}

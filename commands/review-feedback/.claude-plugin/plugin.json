@@ -1,0 +1,13 @@
+{
+  "name": "review-feedback",
+  "description": "Evaluates PR review comments for validity before fixing them.",
+  "author": {
+    "name": "Stian Håklev",
+    "url": "https://github.com/houshuang"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/houshuang/awesome-claude-code",
+  "commands": [
+    "./review-feedback.md"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "name": "post-edit-lint",
+  "description": "Lints each file right after Claude edits it and feeds errors back to Claude.",
+  "author": {
+    "name": "Stian Håklev",
+    "url": "https://github.com/houshuang"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/houshuang/awesome-claude-code",
+  "hooks": "./hooks.json"
+}

@@ -1,10 +1,10 @@
 #!/bin/bash
 # Post-edit lint: runs a linter on changed files immediately after edits.
-# Runs as a Claude Code PostToolUse hook after Edit/MultiEdit/Write.
+# Runs as a Claude Code PostToolUse hook after Edit/Write.
 #
-# Env vars (set by Claude Code):
-#   CLAUDE_FILE_PATH   - absolute path to the edited file
-#   CLAUDE_PROJECT_DIR - absolute path to the project root
+# Input: Claude Code pipes the hook event as JSON on stdin; the edited file
+# is at .tool_input.file_path. CLAUDE_PROJECT_DIR is set in the environment.
+# Exit code 2 feeds stderr back to Claude so it can fix the lint errors.
 #
 # Configuration (set in your environment or .env):
 #   LINT_COMMAND        - linter command to run (default: "eslint")
@@ -17,8 +17,9 @@
 
 set -o pipefail
 
-FILE_PATH="${CLAUDE_FILE_PATH}"
-PROJECT_DIR="${CLAUDE_PROJECT_DIR}"
+INPUT=$(cat)
+FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty')
+PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(echo "$INPUT" | jq -r '.cwd // empty')}"
 
 # Configurable linter (default: eslint)
 LINT_COMMAND="${LINT_COMMAND:-eslint}"
@@ -55,8 +56,8 @@ LINT_EXIT=$?
 
 if [[ $LINT_EXIT -ne 0 ]]; then
   # Strip noisy summary lines, keep only diagnostics
-  echo "$LINT_OUTPUT" | grep -v '^\s*$' | grep -v '^Found '
-  exit 1
+  echo "$LINT_OUTPUT" | grep -v '^\s*$' | grep -v '^Found ' >&2
+  exit 2
 fi
 
 exit 0

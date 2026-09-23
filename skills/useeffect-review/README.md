@@ -38,14 +38,18 @@ MISSING CLEANUP: async fetch without AbortController
 
 ## Installation
 
-Copy the `useeffect-review/` directory to your Claude Code skills folder:
+**As a plugin:**
+
+```
+/plugin marketplace add houshuang/awesome-claude-code
+/plugin install useeffect-review@awesome-claude-code
+```
+
+**Or copy the folder** (from the repo root):
 
 ```bash
-# Global (available in all projects)
-cp -r useeffect-review/ ~/.claude/skills/useeffect-review/
-
-# Project-specific
-cp -r useeffect-review/ .claude/skills/useeffect-review/
+cp -r skills/useeffect-review ~/.claude/skills/   # all your projects
+cp -r skills/useeffect-review .claude/skills/     # this project only
 ```
 
 ## Files

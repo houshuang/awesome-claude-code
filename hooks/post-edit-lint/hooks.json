@@ -1,0 +1,16 @@
+{
+  "description": "post-edit-lint hook from awesome-claude-code",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/post-edit-lint.sh\""
+          }
+        ]
+      }
+    ]
+  }
+}

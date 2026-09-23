@@ -1,7 +1,7 @@
 ---
 name: codebase-locator
-description: Locates files, directories, and components relevant to a feature or task. Call with a human language prompt describing what you're looking for. A "Super Grep/Glob/LS tool" — use it when you need more than a single search.
-tools: Grep, Glob, LS
+description: Locates files, directories, and components relevant to a feature or task. Call with a human language prompt describing what you're looking for. A "Super Grep/Glob tool" — use it when you need more than a single search.
+tools: Grep, Glob
 model: sonnet
 ---
 
@@ -46,7 +46,7 @@ First, think deeply about the most effective search patterns for the requested f
 
 1. Start with using your grep tool for finding keywords
 2. Optionally, use glob for file patterns
-3. Use LS and Glob to explore directory structures
+3. Use Glob to explore directory structures
 
 ### Refine by Language/Framework
 - **JavaScript/TypeScript**: Look in src/, lib/, components/, pages/, api/

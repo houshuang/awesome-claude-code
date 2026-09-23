@@ -1,5 +1,7 @@
 # Code Reviewer Agent
 
+> **Superseded by the built-in `/code-review`** for reviewing a diff, branch or PR. The agent is still useful when you want Claude to delegate a review of specific files to a subagent.
+
 An expert code reviewer that analyzes code with the precision of a senior developer conducting a thorough peer review.
 
 ## When to use
@@ -31,4 +33,16 @@ Structured review with:
 
 ## Installation
 
-Copy `code-reviewer.md` to `.claude/agents/` in your project.
+**As a plugin:**
+
+```
+/plugin marketplace add houshuang/awesome-claude-code
+/plugin install code-reviewer@awesome-claude-code
+```
+
+**Or copy the file** (from the repo root):
+
+```bash
+mkdir -p .claude/agents
+cp agents/code-reviewer/code-reviewer.md .claude/agents/   # or ~/.claude/agents/ for all projects
+```

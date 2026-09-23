@@ -15,19 +15,19 @@ Without intentional discoverability, Claude wastes turns grepping around, readin
 ## The discovery flow
 
 ```
+Session start
+  |
+  v
+Claude Code loads CLAUDE.md (or AGENTS.md) and every skill's description
+  |
+  v
 User request
   |
   v
-Claude checks .claude/ directory
+Instructions or a matching skill description point to the right skill
   |
   v
-Finds CLAUDE.md / PROJECT_INSTRUCTIONS.md
-  |
-  v
-Instructions point to relevant skills
-  |
-  v
-Skills provide detailed workflows
+Skill provides the detailed workflow
   |
   v
 Successful execution
@@ -41,7 +41,7 @@ Don't rely on a single file. Create redundant paths to the same information:
 
 - **CLAUDE.md** -- Primary entry point (auto-loaded by Claude Code)
 - **README.md** -- Secondary (Claude often reads this when exploring)
-- **`.claude/skills/*.md`** -- Task-specific workflows
+- **`.claude/skills/<name>/SKILL.md`** -- Task-specific workflows; Claude loads a skill when its `description` matches the request
 - **`examples/`** -- Working code that demonstrates patterns
 
 ### 2. Keyword-rich naming
@@ -50,18 +50,18 @@ Name files using terms that match how users describe tasks:
 
 ```
 # Good -- matches natural language queries
-.claude/skills/process-data.md
-.claude/skills/deploy-production.md
+.claude/skills/process-data/SKILL.md
+.claude/skills/deploy-production/SKILL.md
 examples/csv-to-parquet-pipeline.ts
 
 # Bad -- requires knowledge of project internals
-.claude/skills/pipeline-v2.md
-.claude/skills/ops.md
+.claude/skills/pipeline-v2/SKILL.md
+.claude/skills/ops/SKILL.md
 ```
 
 ### 3. Trigger-based routing
 
-In your CLAUDE.md, list explicit triggers that route Claude to the right skill:
+Claude sees every skill's `description` and loads a skill when the request matches it, so the description is the primary trigger: say what the skill does and list the phrases users say. For important workflows, an explicit routing list in CLAUDE.md adds a second path:
 
 ```markdown
 ## Quick Recognition Triggers
@@ -90,7 +90,7 @@ Every documentation file should reference related files:
 
 ```markdown
 ## Related
-- Full API docs: `.claude/skills/data-pipeline.md`
+- Full API docs: `.claude/skills/data-pipeline/SKILL.md`
 - Working example: `examples/csv-to-parquet.ts`
 - Architecture: `docs/architecture.md`
 ```

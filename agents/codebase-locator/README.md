@@ -1,6 +1,8 @@
 # Codebase Locator Agent
 
-Locates files, directories, and components relevant to a feature or task. A "Super Grep/Glob/LS" — use it when you need to find where code lives across a codebase.
+> **Superseded by Claude Code's built-in Explore agent**, a read-only search subagent that Claude uses automatically for "where is X?" questions. Kept because `/research` can use it by name.
+
+Locates files, directories, and components relevant to a feature or task. A "Super Grep/Glob" — use it when you need to find where code lives across a codebase.
 
 ## When to use
 
@@ -11,7 +13,7 @@ Locates files, directories, and components relevant to a feature or task. A "Sup
 
 ## How it works
 
-The agent uses Grep, Glob, and LS to systematically search the codebase. It thinks about naming conventions, language-specific directory structures, and related terms to find everything relevant. Results are organized by purpose (implementation, tests, config, types, docs).
+The agent uses Grep and Glob to systematically search the codebase. It thinks about naming conventions, language-specific directory structures, and related terms to find everything relevant. Results are organized by purpose (implementation, tests, config, types, docs).
 
 Key principle: it finds **where** code lives without reading or analyzing **what** it does.
 
@@ -27,4 +29,16 @@ Produces structured file listings organized by:
 
 ## Installation
 
-Copy `codebase-locator.md` to `.claude/agents/` in your project.
+**As a plugin:**
+
+```
+/plugin marketplace add houshuang/awesome-claude-code
+/plugin install codebase-locator@awesome-claude-code
+```
+
+**Or copy the file** (from the repo root):
+
+```bash
+mkdir -p .claude/agents
+cp agents/codebase-locator/codebase-locator.md .claude/agents/   # or ~/.claude/agents/ for all projects
+```

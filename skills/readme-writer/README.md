@@ -33,14 +33,18 @@ A focused README with architecture diagrams, design decision explanations, and k
 
 ## Installation
 
-Copy the `readme-writer/` directory to your Claude Code skills folder:
+**As a plugin:**
+
+```
+/plugin marketplace add houshuang/awesome-claude-code
+/plugin install readme-writer@awesome-claude-code
+```
+
+**Or copy the folder** (from the repo root):
 
 ```bash
-# Global (available in all projects)
-cp -r readme-writer/ ~/.claude/skills/readme-writer/
-
-# Project-specific
-cp -r readme-writer/ .claude/skills/readme-writer/
+cp -r skills/readme-writer ~/.claude/skills/   # all your projects
+cp -r skills/readme-writer .claude/skills/     # this project only
 ```
 
 ## Files

@@ -1,5 +1,5 @@
 ---
-allowed-tools: Task, Read, Grep, Glob, LS, Write, Edit, Bash(git:*)
+allowed-tools: Agent, Read, Grep, Glob, Write, Edit, Bash(git *)
 argument-hint: [path|--all]
 description: Verifies documentation against actual code to detect semantic drift
 model: opus
@@ -50,7 +50,7 @@ For each relevant doc file:
 
 ### Step 3: Verify Against Actual Code
 
-Spawn parallel Task agents to verify each category:
+Spawn parallel subagents to verify each category:
 
 **Structure verification:**
 - Do the documented modules/packages exist?

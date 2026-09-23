@@ -22,4 +22,16 @@ Analyzes PR review feedback for validity before implementing fixes. Prevents bli
 
 ## Installation
 
-Copy `review-feedback.md` to `.claude/commands/` in your project.
+**As a plugin:**
+
+```
+/plugin marketplace add houshuang/awesome-claude-code
+/plugin install review-feedback@awesome-claude-code
+```
+
+**Or copy the file** (from the repo root). Files in `.claude/commands/` still work; Claude Code treats them as skills:
+
+```bash
+mkdir -p .claude/commands
+cp commands/review-feedback/review-feedback.md .claude/commands/
+```

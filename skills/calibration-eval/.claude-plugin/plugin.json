@@ -1,0 +1,13 @@
+{
+  "name": "calibration-eval",
+  "description": "Generates HTML pages for collecting human ground-truth judgments.",
+  "author": {
+    "name": "Stian Håklev",
+    "url": "https://github.com/houshuang"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/houshuang/awesome-claude-code",
+  "skills": [
+    "./"
+  ]
+}

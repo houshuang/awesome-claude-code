@@ -1,5 +1,7 @@
 # Frontend Design
 
+> **Superseded by Anthropic's official `frontend-design` plugin**, which this is an older copy of. Install that instead: `/plugin install frontend-design@claude-plugins-official`. This copy stays for reference.
+
 Create distinctive, production-grade frontend interfaces that avoid generic AI aesthetics. Guides Claude Code toward bold design choices with real typography, intentional color palettes, and memorable visual identity.
 
 ## What it does
@@ -29,15 +31,13 @@ Claude Code will ask clarifying questions about purpose and audience, then commi
 
 ## Installation
 
-Copy the `frontend-design/` directory to your Claude Code skills folder:
+Use the official plugin:
 
-```bash
-# Global (available in all projects)
-cp -r frontend-design/ ~/.claude/skills/frontend-design/
-
-# Project-specific
-cp -r frontend-design/ .claude/skills/frontend-design/
 ```
+/plugin install frontend-design@claude-plugins-official
+```
+
+This older copy can still be installed with `cp -r skills/frontend-design ~/.claude/skills/`.
 
 ## Files
 

@@ -1,0 +1,13 @@
+{
+  "name": "autoresearch",
+  "description": "Runs automated experiment loops: Optuna parameter sweeps or LLM-proposed changes.",
+  "author": {
+    "name": "Stian Håklev",
+    "url": "https://github.com/houshuang"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/houshuang/awesome-claude-code",
+  "skills": [
+    "./"
+  ]
+}

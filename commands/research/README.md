@@ -30,8 +30,22 @@ The research is purely descriptive — it documents what exists without suggesti
 - [codebase-locator agent](../../agents/codebase-locator/) — finds where code lives
 - [codebase-analyzer agent](../../agents/codebase-analyzer/) — analyzes how code works
 
+Without them it falls back to Claude Code's built-in Explore agent. The plugin install below includes both agents.
+
 ## Installation
 
-Copy `research.md` to `.claude/commands/` in your project.
+**As a plugin:**
 
-For full functionality, also install the codebase-locator and codebase-analyzer agents to `.claude/agents/`.
+```
+/plugin marketplace add houshuang/awesome-claude-code
+/plugin install research@awesome-claude-code
+```
+
+**Or copy the file** (from the repo root). Files in `.claude/commands/` still work; Claude Code treats them as skills:
+
+```bash
+mkdir -p .claude/commands
+cp commands/research/research.md .claude/commands/
+```
+
+The plugin includes the codebase-locator and codebase-analyzer agents. When copying by hand, also copy those two agents to `.claude/agents/`.

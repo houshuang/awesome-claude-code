@@ -41,11 +41,12 @@ Then wait for the user's research query.
    - Consider which directories, files, or architectural patterns are relevant
 
 3. **Spawn parallel sub-agent tasks for comprehensive research:**
-   - Create multiple Task agents to research different aspects concurrently
+   - Spawn multiple subagents (Agent tool) to research different aspects concurrently
 
    **For codebase research:**
    - Use the **codebase-locator** agent to find WHERE files and components live
    - Use the **codebase-analyzer** agent to understand HOW specific code works (without critiquing it)
+   - If those agents are not installed, use the built-in **Explore** agent for both
 
    **For web research (only if user explicitly asks):**
    - Use a web search agent for external documentation and resources
@@ -145,7 +146,7 @@ Then wait for the user's research query.
    - Continue updating the document
 
 ## Important notes:
-- Always use parallel Task agents to maximize efficiency and minimize context usage
+- Always use parallel subagents to maximize efficiency and minimize context usage
 - Always run fresh codebase research — never rely solely on existing research documents
 - Focus on finding concrete file paths and line numbers for developer reference
 - Research documents should be self-contained with all necessary context

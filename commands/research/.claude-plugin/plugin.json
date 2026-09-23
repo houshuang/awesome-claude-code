@@ -1,0 +1,13 @@
+{
+  "name": "research",
+  "description": "Researches a codebase question with parallel subagents and writes a research document. Pairs with the codebase-locator and codebase-analyzer plugins.",
+  "author": {
+    "name": "Stian Håklev",
+    "url": "https://github.com/houshuang"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/houshuang/awesome-claude-code",
+  "commands": [
+    "./research.md"
+  ]
+}

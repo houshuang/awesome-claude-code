@@ -32,14 +32,18 @@ A `{topic}-walkthrough.html` file in the project root containing:
 
 ## Installation
 
-Copy the `pr-walkthrough/` directory to your Claude Code skills folder:
+**As a plugin:**
+
+```
+/plugin marketplace add houshuang/awesome-claude-code
+/plugin install pr-walkthrough@awesome-claude-code
+```
+
+**Or copy the folder** (from the repo root):
 
 ```bash
-# Global (available in all projects)
-cp -r pr-walkthrough/ ~/.claude/skills/pr-walkthrough/
-
-# Project-specific
-cp -r pr-walkthrough/ .claude/skills/pr-walkthrough/
+cp -r skills/pr-walkthrough ~/.claude/skills/   # all your projects
+cp -r skills/pr-walkthrough .claude/skills/     # this project only
 ```
 
 ## Files

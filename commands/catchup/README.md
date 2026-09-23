@@ -21,4 +21,16 @@ This is especially useful after running `/clear` to free up context — it lets 
 
 ## Installation
 
-Copy `catchup.md` to `.claude/commands/` in your project.
+**As a plugin:**
+
+```
+/plugin marketplace add houshuang/awesome-claude-code
+/plugin install catchup@awesome-claude-code
+```
+
+**Or copy the file** (from the repo root). Files in `.claude/commands/` still work; Claude Code treats them as skills:
+
+```bash
+mkdir -p .claude/commands
+cp commands/catchup/catchup.md .claude/commands/
+```

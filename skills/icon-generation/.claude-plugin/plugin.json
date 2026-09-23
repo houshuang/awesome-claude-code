@@ -1,0 +1,13 @@
+{
+  "name": "icon-generation",
+  "description": "Generates app icons and favicons from HTML/CSS via headless Chrome.",
+  "author": {
+    "name": "Stian Håklev",
+    "url": "https://github.com/houshuang"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/houshuang/awesome-claude-code",
+  "skills": [
+    "./"
+  ]
+}

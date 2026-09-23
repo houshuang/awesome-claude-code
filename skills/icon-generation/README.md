@@ -30,14 +30,18 @@ Or naturally:
 
 ## Installation
 
-Copy the `icon-generation/` directory to your Claude Code skills folder:
+**As a plugin:**
+
+```
+/plugin marketplace add houshuang/awesome-claude-code
+/plugin install icon-generation@awesome-claude-code
+```
+
+**Or copy the folder** (from the repo root):
 
 ```bash
-# Global (available in all projects)
-cp -r icon-generation/ ~/.claude/skills/icon-generation/
-
-# Project-specific
-cp -r icon-generation/ .claude/skills/icon-generation/
+cp -r skills/icon-generation ~/.claude/skills/   # all your projects
+cp -r skills/icon-generation .claude/skills/     # this project only
 ```
 
 ## Files

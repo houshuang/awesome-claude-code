@@ -1,11 +1,11 @@
 # git-status-line
 
-A shell script for Claude Code's `userPromptStatusLine` hook that shows git repository status, model info, and context usage in a single line.
+A custom [status line](https://code.claude.com/docs/en/statusline) script for Claude Code that shows git repository status, model info, and context usage in a single line.
 
 ## What it shows
 
 ```
-Claude 3.5 Sonnet on main [+2 ~1 ?3] ↑1 in my-project | 42% ctx
+Sonnet 5 on main [+2 ~1 ?3] ↑1 in my-project | 42% ctx
 ```
 
 - **Model name** — which model is active
@@ -27,21 +27,14 @@ Claude 3.5 Sonnet on main [+2 ~1 ?3] ↑1 in my-project | 42% ctx
 2. Add to your Claude Code settings (`~/.claude/settings.json`):
    ```json
    {
-     "hooks": {
-       "UserPromptSubmit": [
-         {
-           "matcher": "",
-           "hooks": [
-             {
-               "type": "command",
-               "command": "~/.claude/git-status-line.sh"
-             }
-           ]
-         }
-       ]
+     "statusLine": {
+       "type": "command",
+       "command": "~/.claude/git-status-line.sh"
      }
    }
    ```
+
+   `statusLine` is a setting, not a hook, so this cannot be installed as a plugin.
 
 ## Requirements
 
@@ -51,7 +44,7 @@ Claude 3.5 Sonnet on main [+2 ~1 ?3] ↑1 in my-project | 42% ctx
 
 ## How it works
 
-Claude Code pipes JSON context to the hook via stdin, containing:
+Claude Code pipes session data as JSON to the script on stdin, containing:
 - `workspace.current_dir` — the current working directory
 - `model.display_name` / `model.id` — the active model
 - `context_window.used_percentage` — how full the context is
@@ -63,5 +56,5 @@ The script parses `git status --porcelain` output to count staged, modified, del
 When not inside a git repository, shows a simplified line:
 
 ```
-Claude 3.5 Sonnet in my-project | 42% ctx
+Sonnet 5 in my-project | 42% ctx
 ```

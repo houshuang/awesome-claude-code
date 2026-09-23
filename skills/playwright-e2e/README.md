@@ -41,14 +41,18 @@ test.describe("Login", () => {
 
 ## Installation
 
-Copy the `playwright-e2e/` directory to your Claude Code skills folder:
+**As a plugin:**
+
+```
+/plugin marketplace add houshuang/awesome-claude-code
+/plugin install playwright-e2e@awesome-claude-code
+```
+
+**Or copy the folder** (from the repo root):
 
 ```bash
-# Global (available in all projects)
-cp -r playwright-e2e/ ~/.claude/skills/playwright-e2e/
-
-# Project-specific
-cp -r playwright-e2e/ .claude/skills/playwright-e2e/
+cp -r skills/playwright-e2e ~/.claude/skills/   # all your projects
+cp -r skills/playwright-e2e .claude/skills/     # this project only
 ```
 
 ## Files

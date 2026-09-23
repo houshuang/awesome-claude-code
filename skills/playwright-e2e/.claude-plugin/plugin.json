@@ -1,0 +1,13 @@
+{
+  "name": "playwright-e2e",
+  "description": "Guides Playwright end-to-end tests toward semantic locators and auto-retrying assertions.",
+  "author": {
+    "name": "Stian Håklev",
+    "url": "https://github.com/houshuang"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/houshuang/awesome-claude-code",
+  "skills": [
+    "./"
+  ]
+}
