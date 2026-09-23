@@ -1,0 +1,11 @@
+{
+  "name": "prevent-main-commit",
+  "description": "Blocks Claude Code from committing directly to main or master.",
+  "author": {
+    "name": "Stian Håklev",
+    "url": "https://github.com/houshuang"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/houshuang/awesome-claude-code",
+  "hooks": "./hooks.json"
+}

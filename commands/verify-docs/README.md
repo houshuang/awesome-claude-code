@@ -20,4 +20,16 @@ Verifies that documentation accurately describes the current codebase by detecti
 
 ## Installation
 
-Copy `verify-docs.md` to `.claude/commands/` in your project.
+**As a plugin:**
+
+```
+/plugin marketplace add houshuang/awesome-claude-code
+/plugin install verify-docs@awesome-claude-code
+```
+
+**Or copy the file** (from the repo root). Files in `.claude/commands/` still work; Claude Code treats them as skills:
+
+```bash
+mkdir -p .claude/commands
+cp commands/verify-docs/verify-docs.md .claude/commands/
+```

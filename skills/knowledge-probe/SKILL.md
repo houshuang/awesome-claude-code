@@ -158,7 +158,7 @@ Run this in the background (with `&` or `run_in_background`). The server listens
 
 Generate a self-contained HTML file at `/tmp/knowledge-probe-assessment.html`. The page should:
 
-**Design** (based on the validated Petrarca v2 assessment format):
+**Design** (based on an assessment format validated in an earlier reading app):
 - Clean, editorial design with warm background (#f7f4ec), serif headings, sans-serif UI
 - Card-based flow: one concept per card
 - Progress bar at top showing completion

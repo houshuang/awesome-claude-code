@@ -1,39 +1,38 @@
 ---
-name: claude-api
-description: "Build apps with the Claude API or Anthropic SDK.\nTRIGGER when: code imports `anthropic`/`@anthropic-ai/sdk`/`claude_agent_sdk`, or user asks to use Claude API, Anthropic SDKs, or Agent SDK.\nDO NOT TRIGGER when: code imports `openai`/other AI SDK, general programming questions."
+name: claude-cli-backend
+description: "Use the Claude Code CLI (`claude -p`) as a programmatic LLM backend from Python scripts: flags, structured output with --json-schema, a subprocess wrapper with parallel batching, subscription vs API-key auth, and when to switch to the API or Agent SDK. Use when a script or pipeline shells out to `claude -p`, or the user asks how to call Claude from code via the CLI."
 ---
 
 # Claude CLI (`claude -p`) Integration for Data Processing
 
-Reference guide for integrating `claude -p` as a programmatic LLM backend in Python projects. Based on patterns from 5 production projects (alif, petrarca, otak, ralph-bot, nrk-kulturperler) and 28,000+ CLI calls/week.
+Reference guide for integrating `claude -p` as a programmatic LLM backend in Python projects. Based on patterns from several production data pipelines that make thousands of CLI calls a week.
 
 ## When to Use `claude -p` vs Direct API vs Agent SDK
 
 | Use `claude -p` | Use Direct API | Use Agent SDK |
 |---|---|---|
-| **Max plan (free, no per-token cost)** | High-volume batch (Batch API = 50% off) | Production automation needing in-process control |
+| **Subscription login (no per-token billing)** | High-volume batch (Batch API = 50% off) | Production automation needing in-process control |
 | Need built-in tools (Read, Bash, Grep) | Need prompt caching (90% savings) | CI/CD pipelines with API budget |
 | Quick scripts, prototyping | Production services with persistent connections | Custom tool definitions in-process |
 | Multi-turn agentic sessions | Fine-grained token/cost control | Subagent orchestration |
 | < 1000 calls/day | > 1000 calls/day or latency-critical | When subprocess overhead is unacceptable |
 
-**Key difference:** `claude -p` uses your existing Max plan subscription (free LLM calls). Both Direct API and Agent SDK require `ANTHROPIC_API_KEY` and bill per-token. If you have a Max plan, `claude -p` is the most cost-effective programmatic interface by far.
+**Key difference:** logged in with a Claude subscription (Pro/Max/Team), `claude -p` runs against your plan's usage limits instead of per-token billing. The Direct API is billed per token with an `ANTHROPIC_API_KEY`. Check your plan's terms before running large unattended jobs on a subscription login; for team or production pipelines, an API key (or Bedrock/Vertex/Foundry) is the normal choice.
 
-## CRITICAL: Never Use `--bare` (Breaks Max Plan OAuth)
+## `--bare`: pick it deliberately
 
-`--bare` skips OAuth/keychain discovery. This means:
-- **Requires `ANTHROPIC_API_KEY` env var** — uses paid API, NOT free Max plan
-- Without a key, `--bare` fails with "Not logged in"
-- **On servers using `claude setup-token` for free Max plan**: `--bare` either fails or costs money
+`--bare` skips auto-discovery of hooks, skills, plugins, MCP servers, auto memory and CLAUDE.md, so calls start faster and behave the same on every machine. It also never reads OAuth credentials or the keychain:
+- **Requires `ANTHROPIC_API_KEY`** (or an `apiKeyHelper` in `--settings`); it does not use your subscription login
+- Without a key it fails with "Not logged in"
 
-Anthropic plans to make `--bare` the default for `-p` in a future release. **When that happens, we will need to explicitly opt out** (likely via a flag like `--no-bare` or equivalent) to preserve Max plan OAuth. Watch the changelog.
+The docs recommend `--bare` for scripted and SDK calls and say it **will become the default for `-p` in a future release**. If your pipeline depends on a subscription login, watch the changelog for that switch.
 
-**Never use `--bare`** in any of our projects — we rely on Max plan auth for free usage everywhere (alif, petrarca, otak, ralph-bot, etc.).
-**For latency**: use `--effort low` instead (~25% faster, no auth changes).
+**With an API key**: use `--bare` in CI and scripts.
+**With a subscription login**: leave it off; use `--effort low` for latency instead (~25% faster, no auth changes).
 
 ## Essential Flags
 
-### For Max plan (free) scripted calls
+### For subscription-login scripted calls
 ```bash
 claude -p \
   --output-format json \            # Structured response with metadata
@@ -44,9 +43,8 @@ claude -p \
 
 ### For paid API scripted calls (with ANTHROPIC_API_KEY)
 ```bash
-# NOTE: If using Max plan auth (free), DO NOT add --bare — it breaks OAuth.
-# --bare is only safe with an explicit ANTHROPIC_API_KEY.
-claude -p \
+# --bare needs ANTHROPIC_API_KEY; it ignores your subscription login.
+claude --bare -p \
   --output-format json \
   --no-session-persistence \
   --tools "" \
@@ -77,18 +75,17 @@ claude -p \
 ### Key flags reference
 | Flag | Purpose | When to use |
 |---|---|---|
-| `--bare` | Skip auto-discovery (**breaks OAuth — never use with Max plan**) | Only with explicit API key |
-| `--effort` | Reasoning depth: `low`/`medium`/`high`/`max` | `low` for simple tasks (25% faster) |
+| `--bare` | Skip auto-discovery and OAuth (**API key only**) | CI and API-key scripts |
+| `--effort` | Reasoning depth: `low`/`medium`/`high`/`xhigh`/`max` | `low` for simple tasks (25% faster) |
 | `--json-schema` | Constrained structured output | When you need reliable JSON |
 | `--tools ""` | Disable all tools (`"default"` re-enables all) | Single-turn generation |
 | `--allowedTools` | Pre-approve specific tools | Multi-turn with tools |
 | `--disallowedTools` | Block specific tools | Restrict dangerous tools |
 | `--max-turns N` | Cap agentic turns | Tool-enabled sessions |
 | `--max-budget-usd N` | Cost safety cap | Multi-turn sessions |
-| `--permission-mode` | `acceptEdits`/`auto`/`dontAsk`/`plan`/`default` | Replaces ad-hoc permission handling |
-| `--fallback-model` | Auto-fallback on overload (print mode only) | Production reliability |
+| `--permission-mode` | `default`/`acceptEdits`/`auto`/`dontAsk`/`plan`/`bypassPermissions` | `-p` starts in `default`; `auto` lets a classifier approve actions |
+| `--fallback-model` | Fallback model(s) when the primary is overloaded or retired (comma-separated chain) | Production reliability |
 | `--system-prompt` | Replace entire system prompt | Custom behavior |
-| `--system-prompt-file` | System prompt from file | Long/shared system prompts |
 | `--append-system-prompt` | Add to default prompt | Keep Claude Code capabilities |
 | `--add-dir` | Additional directory access | Tool sessions needing file access |
 | `--model` | Model selection | `haiku` (cheap), `sonnet` (balanced), `opus` (best) |
@@ -96,17 +93,19 @@ claude -p \
 | `--mcp-config` | MCP server configuration | Headless calls with MCP tools |
 | `--input-format stream-json` | Bidirectional streaming input | Real-time streaming integrations |
 
-### `--effort` levels (Sonnet 4.6, Opus 4.6 only)
+### `--effort` levels
+Available levels depend on the model; check `claude --help` for your version.
+
 | Level | Speed | Quality | Notes |
 |---|---|---|---|
 | `low` | Fast | Lower | Simple tasks, classification |
 | `medium` | Default | Default | Most work |
-| `high` | Slow | Higher | Complex reasoning. Also triggered by "ultrathink" in prompt |
-| `max` | Very slow | Highest | Opus only, unconstrained thinking |
+| `high` / `xhigh` | Slow | Higher | Complex reasoning |
+| `max` | Very slow | Highest | Hardest problems |
 
 ## Python Wrapper — Reference Implementation
 
-Drop this into any project as `claude_cli.py`. Consolidates patterns from 5 production projects:
+Drop this into any project as `claude_cli.py`. It consolidates patterns from several production projects:
 
 ```python
 """Claude CLI wrapper — structured generation via `claude -p`.
@@ -292,6 +291,8 @@ def generate_parallel(
 | Classification, tagging, extraction | `haiku` | Fast, cheap, reliable for simple structured output |
 | Sentence/text generation | `sonnet` | Better quality, still fast |
 | Complex reasoning, creative writing | `opus` | Best quality, use sparingly |
+
+The aliases track the current models (at the time of writing Haiku 4.5, Sonnet 5 and Opus 5.5), so scripts that use them keep working when models are retired.
 | Verification, quality gate | `haiku` | Cheap enough to run on every item |
 | Multi-turn agentic (file reading, self-correction) | `sonnet` | Balances quality + tool use cost |
 
@@ -420,9 +421,9 @@ def log_call(task_type, model, result, metadata, log_dir="data/logs"):
 
 ## Common Pitfalls
 
-1. **Using `--bare` with Max plan auth** — `--bare` skips OAuth, requires `ANTHROPIC_API_KEY`. Uses paid API instead of free Max plan. **Never use `--bare` in our projects** — we rely on Max plan auth everywhere. When `--bare` becomes the `-p` default in a future release, we'll need to explicitly opt out to preserve OAuth.
+1. **Using `--bare` with a subscription login** — `--bare` skips OAuth and requires `ANTHROPIC_API_KEY`, so it either fails or bills the API key. When `--bare` becomes the `-p` default in a future release, subscription-login pipelines will need to opt out.
 
-2. **Not stripping `CLAUDECODE` env var** — nested invocation from within Claude Code sessions fails or behaves differently. Always strip: `env = {k: v for k, v in os.environ.items() if k != "CLAUDECODE"}`. Found missing in 4 of 6 audited projects.
+2. **Not stripping `CLAUDECODE` env var** — nested invocation from within Claude Code sessions fails or behaves differently. Always strip: `env = {k: v for k, v in os.environ.items() if k != "CLAUDECODE"}`. This was missing in most of the projects we audited.
 
 3. **Using prompt-based JSON instead of `--json-schema`** — LLMs hallucinate JSON structure. Constrained decoding doesn't. Note: adds ~1s overhead per call.
 
@@ -432,13 +433,13 @@ def log_call(task_type, model, result, metadata, log_dir="data/logs"):
 
 6. **Fragile markdown fence stripping** — most wrappers use `re.sub(r"^```json?\s*", "", text)` which misses edge cases. Better: `re.search(r'```(?:json)?\s*\n?([\s\S]*?)\n?\s*```', text)` (non-greedy, matches between fences).
 
-7. **Not committing wrapper changes** — the Alif migration was written locally but never deployed for 3 days (3,600 wasted API calls). Always commit + deploy LLM routing changes.
+7. **Not committing wrapper changes** — in one project a migration to the CLI sat undeployed for three days, and the old path kept making paid API calls. Commit and deploy LLM routing changes together.
 
 8. **`--no-session-persistence` breaks `--resume`** — session ID is returned but conversation isn't saved. Don't try to resume stateless sessions.
 
-9. **`--effort` on unsupported models** — only works on Sonnet 4.6 and Opus 4.6. Silently ignored on Haiku (no error, no effect).
+9. **`--effort` on models without effort support** — levels depend on the model. At the time of the benchmark below it was silently ignored on Haiku (no error, no effect).
 
-## Benchmarks (measured 2026-04-03, local Mac + Hetzner server)
+## Benchmarks (measured 2026-04-03 on a Mac and a Linux server; re-measure on current versions)
 
 | Config | Mean latency | vs baseline |
 |---|---|---|
@@ -460,13 +461,13 @@ The `claude-agent-sdk` (Python/TypeScript) is Anthropic's recommended programmat
 - Hooks as callback functions, subagent orchestration, MCP integration
 - Streaming output, session management with resume/fork
 
-**However, the Agent SDK always requires `ANTHROPIC_API_KEY` and bills per-token.** If you have a Max plan, `claude -p` is dramatically cheaper — every call is free. The Agent SDK only makes sense when:
-- You don't have a Max plan (or are OK with per-token billing)
+**However, the Agent SDK is designed for API-key (per-token) billing.** If you are working from a subscription login, `claude -p` avoids per-token costs. The Agent SDK makes sense when:
+- You are using an API key anyway (or are OK with per-token billing)
 - Subprocess overhead is unacceptable (latency-critical paths)
 - You need in-process tool definitions or streaming callbacks
 - You're building a production service that needs the SDK's API surface
 
-For batch data processing, content generation, and scripted workflows where Max plan is available, `claude -p` remains the right choice.
+For personal batch jobs, content generation and scripted workflows on a subscription login, `claude -p` remains a good choice.
 
 ## Migrating an Existing Project
 
@@ -477,4 +478,4 @@ For batch data processing, content generation, and scripted workflows where Max 
 5. **Add `--max-turns` and `--max-budget-usd`** for tool-enabled sessions
 6. **Log calls** with task_type to JSONL for monitoring
 7. **Test on server**: Claude CLI must be installed + authenticated (`claude setup-token`)
-8. **Never use `--bare`** — our projects all rely on Max plan OAuth
+8. **Decide on `--bare` explicitly** — use it with an API key; leave it off for subscription login

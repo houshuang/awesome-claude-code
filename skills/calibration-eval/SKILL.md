@@ -74,7 +74,7 @@ Example: Does the argument extraction capture all 24 human-flagged claims?
 
 Before generating the HTML, prepare the evaluation data as JSON. The data source varies by project — common patterns:
 
-### From a database/graph (otak, petrarca)
+### From a database or knowledge graph
 ```python
 # Sample N items, stratified by type/score/category
 import json, random
@@ -130,7 +130,7 @@ python3 ~/.claude/skills/shared/build_eval.py \
 {
   "title": "Extraction Quality Audit",
   "type": "rate",                    // "rate" | "compare" | "threshold"
-  "storageKey": "calibration-otak-2026-03-22-extraction",
+  "storageKey": "calibration-myproject-2026-03-22-extraction",
   "autoAdvance": true,               // move to next after primary rating
   "clipboardMaxLabel": 60,           // truncate content in clipboard output
   "allowNotes": true,
@@ -296,7 +296,7 @@ When the user pastes back:
 
 ### The Cascade: When NOT to Use Human Eval
 
-Before building an eval page, check whether cheaper methods suffice. Use the **cascade pattern** (from LLM-as-judge research, validated in Petrarca/otak):
+Before building an eval page, check whether cheaper methods suffice. Use the **cascade pattern** (from LLM-as-judge research, validated in several of our pipelines):
 
 ```
 [Stage 1: Rules/embeddings]  — free, instant, handles ~60% of items
@@ -405,7 +405,7 @@ Use **calibration-eval** when you need human judgment as ground truth to validat
 
 ## Examples from Past Sessions
 
-### Hirsch Atlas: Extraction Recall Optimization (2026-03-30)
+### Book-extraction pipeline: Extraction Recall Optimization (2026-03-30)
 - **Type**: Extraction Recall (Type 4) — automated
 - **Ground truth**: 24 human-flagged items from Prologue + Chapter 1 calibration
 - **Extraction**: Phase 1 sliding-window extraction output (claims, concepts, cases, thinkers)
@@ -414,34 +414,34 @@ Use **calibration-eval** when you need human judgment as ground truth to validat
 - **Key learning**: The eval was used inside an autoresearch loop — each experiment modified the extraction prompt/approach, ran the eval, and kept/reverted based on the score. High variance (~0.06) from LLM non-determinism required running 2-3x per experiment. Structural changes (sliding window) beat prompt tuning.
 - **Workflow**: Type 1 (manual calibration HTML) created ground truth → Type 4 (eval_recall.py) automated optimization → Type 1 again to validate on unseen Chapter 7.
 
-### Otak: Factcheck Verdict Quality (2026-03-20)
+### Podcast fact-checker: Verdict Quality (2026-03-20)
 - **Type**: Rate + Compare
 - **Items**: 112 podcast claims with system verdicts from two search strategies
 - **Dimensions**: extraction quality (good/wrong/trivial), verdict accuracy per strategy (correct/wrong/partial), which strategy better
 - **Result**: Identified 16% extraction errors, structured search better in 62% of disagreements
 - **Key learning**: Show transcript context alongside claims — evaluator needs to see what the speaker actually said
 
-### Otak: Extraction Quality Audit (2026-03-19)
+### Claim database: Extraction Quality Audit (2026-03-19)
 - **Type**: Rate
 - **Items**: Stratified sample across thesis/journal/news claims
 - **Dimensions**: Is this a genuine claim? Is claim_type correct?
 - **Result**: 1,507 boilerplate claims identified for deletion, 10,191 missing claim_type
 
-### MDG: Classification Inter-Rater (2026-02-26)
+### Document classifier: Inter-Rater Check (2026-02-26)
 - **Type**: Automated validation (no HTML page needed)
 - **Items**: 9,106 classified items re-classified by second LLM
 - **Dimensions**: topic (4% disagreement), specificity (15%), is_local (6%)
 - **Result**: 300 topic fixes, 388 specificity fixes applied automatically above confidence threshold
 - **Key learning**: When disagreement rate is low (<10%), automated fixes at high confidence are safe. When high (>15%), you need human tiebreaker.
 
-### Petrarca: Novelty Detection NLI (2026-03-07)
+### Reading app: Novelty Detection NLI (2026-03-07)
 - **Type**: Threshold calibration (automated)
 - **Items**: 125 claim pairs in the 0.68-0.78 cosine similarity "ambiguous zone"
 - **Dimensions**: duplicate/related/different
 - **Result**: NLI cross-encoder resolved 59% at zero cost; remaining 41% went to LLM. 70-90% cost reduction.
 - **Key learning**: Only human-label the ambiguous middle. High-confidence ends don't need humans.
 
-### Petrarca: Knowledge Probe Calibration (2026-03-19)
+### Reading app: Knowledge Probe Calibration (2026-03-19)
 - **Type**: Rate (card assessment)
 - **Items**: 20-55 knowledge graph nodes
 - **Dimensions**: familiarity (new/basic/solid)

@@ -1,7 +1,7 @@
 ---
 name: code-reviewer
 description: Use this agent when you need to review code for quality, correctness, and best practices. Useful for reviewing implementations before submitting PRs, or for getting a second opinion on complex code.
-tools: Task, Bash, Glob, Grep, LS, Read, Edit, MultiEdit, Write, WebFetch, WebSearch
+tools: Agent, Bash, Glob, Grep, Read, Edit, Write, WebFetch, WebSearch
 model: opus
 ---
 

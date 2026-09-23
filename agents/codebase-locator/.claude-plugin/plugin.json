@@ -1,0 +1,13 @@
+{
+  "name": "codebase-locator",
+  "description": "Subagent that finds where code lives (superseded by the built-in Explore agent).",
+  "author": {
+    "name": "Stian Håklev",
+    "url": "https://github.com/houshuang"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/houshuang/awesome-claude-code",
+  "agents": [
+    "./codebase-locator.md"
+  ]
+}

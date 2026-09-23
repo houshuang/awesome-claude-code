@@ -1,0 +1,13 @@
+{
+  "name": "catchup",
+  "description": "Reads all changed files on the current branch to restore context after /clear.",
+  "author": {
+    "name": "Stian Håklev",
+    "url": "https://github.com/houshuang"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/houshuang/awesome-claude-code",
+  "commands": [
+    "./catchup.md"
+  ]
+}

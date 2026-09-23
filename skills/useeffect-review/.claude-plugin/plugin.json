@@ -1,0 +1,13 @@
+{
+  "name": "useeffect-review",
+  "description": "Reviews React code for unnecessary or incorrect useEffect usage.",
+  "author": {
+    "name": "Stian Håklev",
+    "url": "https://github.com/houshuang"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/houshuang/awesome-claude-code",
+  "skills": [
+    "./"
+  ]
+}

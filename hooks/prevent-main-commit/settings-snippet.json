@@ -3,7 +3,12 @@
     "PreToolUse": [
       {
         "matcher": "Bash",
-        "command": ".claude/hooks/prevent-main-commit.sh"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/prevent-main-commit.sh"
+          }
+        ]
       }
     ]
   }

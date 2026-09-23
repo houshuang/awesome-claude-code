@@ -1,0 +1,11 @@
+{
+  "name": "pre-commit-quality-gate",
+  "description": "Runs lint and typecheck on staged files and blocks Claude's git commit if they fail.",
+  "author": {
+    "name": "Stian Håklev",
+    "url": "https://github.com/houshuang"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/houshuang/awesome-claude-code",
+  "hooks": "./hooks.json"
+}

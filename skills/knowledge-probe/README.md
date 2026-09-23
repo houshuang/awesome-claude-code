@@ -4,10 +4,20 @@ Adaptively map what a user knows about a topic via an interactive HTML assessmen
 
 Supports loading existing knowledge graphs or generating new ones from topic descriptions. Uses entropy-maximizing probe ordering to minimize the number of questions needed.
 
-## Install
+## Installation
+
+**As a plugin:**
+
+```
+/plugin marketplace add houshuang/awesome-claude-code
+/plugin install knowledge-probe@awesome-claude-code
+```
+
+**Or copy the folder** (from the repo root):
 
 ```bash
-cp -r skills/knowledge-probe ~/.claude/skills/
+cp -r skills/knowledge-probe ~/.claude/skills/   # all your projects
+cp -r skills/knowledge-probe .claude/skills/     # this project only
 ```
 
 ## Dependencies

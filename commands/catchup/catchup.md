@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git branch:*), Bash(git merge-base:*), Read
+allowed-tools: Bash(git status *), Bash(git diff *), Bash(git log *), Bash(git branch *), Bash(git merge-base *), Read
 argument-hint: [base-branch]
 description: Read all changed files in the current git branch to get Claude up to speed
 model: sonnet

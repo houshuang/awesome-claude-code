@@ -11,7 +11,7 @@ Analyzes codebase implementation details with surgical precision. Traces data fl
 
 ## How it works
 
-The agent reads files, traces function calls step by step, and produces structured documentation of the implementation. It uses Read, Grep, Glob, and LS tools to explore the codebase.
+The agent reads files, traces function calls step by step, and produces structured documentation of the implementation. It uses the Read, Grep and Glob tools to explore the codebase.
 
 Key principle: it **documents** what exists without critiquing or suggesting improvements. Think of it as a technical writer, not a code reviewer.
 
@@ -26,4 +26,16 @@ Produces structured analysis with:
 
 ## Installation
 
-Copy `codebase-analyzer.md` to `.claude/agents/` in your project.
+**As a plugin:**
+
+```
+/plugin marketplace add houshuang/awesome-claude-code
+/plugin install codebase-analyzer@awesome-claude-code
+```
+
+**Or copy the file** (from the repo root):
+
+```bash
+mkdir -p .claude/agents
+cp agents/codebase-analyzer/codebase-analyzer.md .claude/agents/   # or ~/.claude/agents/ for all projects
+```

@@ -10,6 +10,15 @@ Claude Code can introduce type errors or lint violations during multi-file chang
 
 ## Installation
 
+**As a plugin** (recommended):
+
+```
+/plugin marketplace add houshuang/awesome-claude-code
+/plugin install pre-commit-quality-gate@awesome-claude-code
+```
+
+**Or copy it into one project:**
+
 1. Copy the script to your project:
    ```bash
    mkdir -p .claude/hooks
@@ -17,14 +26,19 @@ Claude Code can introduce type errors or lint violations during multi-file chang
    chmod +x .claude/hooks/pre-commit-quality-gate.sh
    ```
 
-2. Add the hook config to `.claude/settings.json` or `.claude/settings.local.json`:
+2. Add the hook config (also in `settings-snippet.json`) to `.claude/settings.json` or `.claude/settings.local.json`:
    ```json
    {
      "hooks": {
        "PreToolUse": [
          {
            "matcher": "Bash",
-           "command": ".claude/hooks/pre-commit-quality-gate.sh"
+           "hooks": [
+             {
+               "type": "command",
+               "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pre-commit-quality-gate.sh"
+             }
+           ]
          }
        ]
      }
@@ -67,3 +81,5 @@ export TYPECHECK_COMMAND="npx tsc --noEmit -p {pkg_dir}/tsconfig.json"
 4. Detects which monorepo packages have staged changes and runs typecheck on each
 5. If any check fails, returns a `deny` decision with all errors, blocking the commit
 6. Claude Code sees the errors and can fix them before retrying the commit
+
+Requires `jq`.

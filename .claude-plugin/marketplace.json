@@ -1,0 +1,263 @@
+{
+  "name": "awesome-claude-code",
+  "owner": {
+    "name": "Stian Håklev",
+    "url": "https://github.com/houshuang"
+  },
+  "description": "Production-tested Claude Code skills, commands, agents and hooks.",
+  "plugins": [
+    {
+      "name": "prevent-main-commit",
+      "source": "./hooks/prevent-main-commit",
+      "description": "Blocks Claude Code from committing directly to main or master.",
+      "category": "hooks",
+      "author": {
+        "name": "Stian Håklev",
+        "url": "https://github.com/houshuang"
+      },
+      "license": "MIT"
+    },
+    {
+      "name": "pre-commit-quality-gate",
+      "source": "./hooks/pre-commit-quality-gate",
+      "description": "Runs lint and typecheck on staged files and blocks Claude's git commit if they fail.",
+      "category": "hooks",
+      "author": {
+        "name": "Stian Håklev",
+        "url": "https://github.com/houshuang"
+      },
+      "license": "MIT"
+    },
+    {
+      "name": "post-edit-lint",
+      "source": "./hooks/post-edit-lint",
+      "description": "Lints each file right after Claude edits it and feeds errors back to Claude.",
+      "category": "hooks",
+      "author": {
+        "name": "Stian Håklev",
+        "url": "https://github.com/houshuang"
+      },
+      "license": "MIT"
+    },
+    {
+      "name": "pr-walkthrough",
+      "source": "./skills/pr-walkthrough",
+      "description": "Generates a pedagogical HTML walkthrough of a PR or feature branch.",
+      "category": "skills",
+      "author": {
+        "name": "Stian Håklev",
+        "url": "https://github.com/houshuang"
+      },
+      "license": "MIT"
+    },
+    {
+      "name": "visual-explainer",
+      "source": "./skills/visual-explainer",
+      "description": "Generates self-contained HTML diagrams, tables and visual explanations (by nicobailon).",
+      "category": "skills",
+      "author": {
+        "name": "Stian Håklev",
+        "url": "https://github.com/houshuang"
+      },
+      "license": "MIT"
+    },
+    {
+      "name": "icon-generation",
+      "source": "./skills/icon-generation",
+      "description": "Generates app icons and favicons from HTML/CSS via headless Chrome.",
+      "category": "skills",
+      "author": {
+        "name": "Stian Håklev",
+        "url": "https://github.com/houshuang"
+      },
+      "license": "MIT"
+    },
+    {
+      "name": "useeffect-review",
+      "source": "./skills/useeffect-review",
+      "description": "Reviews React code for unnecessary or incorrect useEffect usage.",
+      "category": "skills",
+      "author": {
+        "name": "Stian Håklev",
+        "url": "https://github.com/houshuang"
+      },
+      "license": "MIT"
+    },
+    {
+      "name": "playwright-e2e",
+      "source": "./skills/playwright-e2e",
+      "description": "Guides Playwright end-to-end tests toward semantic locators and auto-retrying assertions.",
+      "category": "skills",
+      "author": {
+        "name": "Stian Håklev",
+        "url": "https://github.com/houshuang"
+      },
+      "license": "MIT"
+    },
+    {
+      "name": "readme-writer",
+      "source": "./skills/readme-writer",
+      "description": "Writes READMEs that explain architecture and design decisions rather than restating types.",
+      "category": "skills",
+      "author": {
+        "name": "Stian Håklev",
+        "url": "https://github.com/houshuang"
+      },
+      "license": "MIT"
+    },
+    {
+      "name": "claude-cli-backend",
+      "source": "./skills/claude-cli-backend",
+      "description": "Reference for using claude -p as a programmatic LLM backend from Python.",
+      "category": "skills",
+      "author": {
+        "name": "Stian Håklev",
+        "url": "https://github.com/houshuang"
+      },
+      "license": "MIT"
+    },
+    {
+      "name": "autoresearch",
+      "source": "./skills/autoresearch",
+      "description": "Runs automated experiment loops: Optuna parameter sweeps or LLM-proposed changes.",
+      "category": "skills",
+      "author": {
+        "name": "Stian Håklev",
+        "url": "https://github.com/houshuang"
+      },
+      "license": "MIT"
+    },
+    {
+      "name": "calibration-eval",
+      "source": "./skills/calibration-eval",
+      "description": "Generates HTML pages for collecting human ground-truth judgments.",
+      "category": "skills",
+      "author": {
+        "name": "Stian Håklev",
+        "url": "https://github.com/houshuang"
+      },
+      "license": "MIT"
+    },
+    {
+      "name": "knowledge-probe",
+      "source": "./skills/knowledge-probe",
+      "description": "Maps what a user knows about a topic, then writes a personalized explainer.",
+      "category": "skills",
+      "author": {
+        "name": "Stian Håklev",
+        "url": "https://github.com/houshuang"
+      },
+      "license": "MIT"
+    },
+    {
+      "name": "catchup",
+      "source": "./commands/catchup",
+      "description": "Reads all changed files on the current branch to restore context after /clear.",
+      "category": "commands",
+      "author": {
+        "name": "Stian Håklev",
+        "url": "https://github.com/houshuang"
+      },
+      "license": "MIT"
+    },
+    {
+      "name": "commit",
+      "source": "./commands/commit",
+      "description": "Groups the session's changes into logical commits with clear messages.",
+      "category": "commands",
+      "author": {
+        "name": "Stian Håklev",
+        "url": "https://github.com/houshuang"
+      },
+      "license": "MIT"
+    },
+    {
+      "name": "review-branch",
+      "source": "./commands/review-branch",
+      "description": "Self-reviews the current branch before a PR (superseded by built-in /code-review).",
+      "category": "commands",
+      "author": {
+        "name": "Stian Håklev",
+        "url": "https://github.com/houshuang"
+      },
+      "license": "MIT"
+    },
+    {
+      "name": "review-feedback",
+      "source": "./commands/review-feedback",
+      "description": "Evaluates PR review comments for validity before fixing them.",
+      "category": "commands",
+      "author": {
+        "name": "Stian Håklev",
+        "url": "https://github.com/houshuang"
+      },
+      "license": "MIT"
+    },
+    {
+      "name": "rebase-stack",
+      "source": "./commands/rebase-stack",
+      "description": "Rebases a stack of dependent PRs onto a target branch.",
+      "category": "commands",
+      "author": {
+        "name": "Stian Håklev",
+        "url": "https://github.com/houshuang"
+      },
+      "license": "MIT"
+    },
+    {
+      "name": "verify-docs",
+      "source": "./commands/verify-docs",
+      "description": "Detects drift between documentation and code.",
+      "category": "commands",
+      "author": {
+        "name": "Stian Håklev",
+        "url": "https://github.com/houshuang"
+      },
+      "license": "MIT"
+    },
+    {
+      "name": "research",
+      "source": "./commands/research",
+      "description": "Researches a codebase question with parallel subagents and writes a research document. Pairs with the codebase-locator and codebase-analyzer plugins.",
+      "category": "commands",
+      "author": {
+        "name": "Stian Håklev",
+        "url": "https://github.com/houshuang"
+      },
+      "license": "MIT"
+    },
+    {
+      "name": "codebase-analyzer",
+      "source": "./agents/codebase-analyzer",
+      "description": "Read-only subagent that explains how code works, with file:line references.",
+      "category": "agents",
+      "author": {
+        "name": "Stian Håklev",
+        "url": "https://github.com/houshuang"
+      },
+      "license": "MIT"
+    },
+    {
+      "name": "codebase-locator",
+      "source": "./agents/codebase-locator",
+      "description": "Subagent that finds where code lives (superseded by the built-in Explore agent).",
+      "category": "agents",
+      "author": {
+        "name": "Stian Håklev",
+        "url": "https://github.com/houshuang"
+      },
+      "license": "MIT"
+    },
+    {
+      "name": "code-reviewer",
+      "source": "./agents/code-reviewer",
+      "description": "Subagent for structured code review with severity tiers.",
+      "category": "agents",
+      "author": {
+        "name": "Stian Håklev",
+        "url": "https://github.com/houshuang"
+      },
+      "license": "MIT"
+    }
+  ]
+}

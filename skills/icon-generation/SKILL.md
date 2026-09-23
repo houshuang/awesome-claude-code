@@ -1,3 +1,8 @@
+---
+name: icon-generation
+description: Generate app icons and favicons as PNG files by designing them in HTML/CSS and screenshotting with headless Chrome at exact pixel sizes. Use when the user asks for an app icon, adaptive icon, favicon or other icon PNGs.
+---
+
 # App Icon Generation
 
 Generate app icon PNGs from HTML/CSS designs using Chrome headless screenshots.

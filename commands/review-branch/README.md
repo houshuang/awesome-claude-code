@@ -1,5 +1,7 @@
 # /review-branch
 
+> **Superseded by the built-in `/code-review`** (alias `/review`), which reviews the current diff, a branch or a PR at a chosen effort level. Keep this command only if you want its specific output format.
+
 Reviews the code changes in the current checked-out branch, providing structured feedback like a senior developer peer review.
 
 ## Usage
@@ -20,4 +22,16 @@ Uses Opus for thorough, high-quality code review analysis.
 
 ## Installation
 
-Copy `review-branch.md` to `.claude/commands/` in your project.
+**As a plugin:**
+
+```
+/plugin marketplace add houshuang/awesome-claude-code
+/plugin install review-branch@awesome-claude-code
+```
+
+**Or copy the file** (from the repo root). Files in `.claude/commands/` still work; Claude Code treats them as skills:
+
+```bash
+mkdir -p .claude/commands
+cp commands/review-branch/review-branch.md .claude/commands/
+```

@@ -21,4 +21,16 @@ Uses Haiku for speed since this is a straightforward task.
 
 ## Installation
 
-Copy `commit.md` to `.claude/commands/` in your project.
+**As a plugin:**
+
+```
+/plugin marketplace add houshuang/awesome-claude-code
+/plugin install commit@awesome-claude-code
+```
+
+**Or copy the file** (from the repo root). Files in `.claude/commands/` still work; Claude Code treats them as skills:
+
+```bash
+mkdir -p .claude/commands
+cp commands/commit/commit.md .claude/commands/
+```

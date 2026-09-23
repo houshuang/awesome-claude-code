@@ -1,0 +1,13 @@
+{
+  "name": "rebase-stack",
+  "description": "Rebases a stack of dependent PRs onto a target branch.",
+  "author": {
+    "name": "Stian Håklev",
+    "url": "https://github.com/houshuang"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/houshuang/awesome-claude-code",
+  "commands": [
+    "./rebase-stack.md"
+  ]
+}

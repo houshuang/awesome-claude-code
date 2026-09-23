@@ -1,0 +1,13 @@
+{
+  "name": "commit",
+  "description": "Groups the session's changes into logical commits with clear messages.",
+  "author": {
+    "name": "Stian Håklev",
+    "url": "https://github.com/houshuang"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/houshuang/awesome-claude-code",
+  "commands": [
+    "./commit.md"
+  ]
+}

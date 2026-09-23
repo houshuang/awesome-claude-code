@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash(git:*), Bash(gh:*)
+allowed-tools: Bash(git *), Bash(gh *)
 argument-hint: [target branch to rebase onto, default: main]
 description: Rebase a stack of PRs onto a target branch, trickling changes down through the chain
 ---

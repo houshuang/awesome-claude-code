@@ -105,7 +105,7 @@ Don't put your entire architecture in CLAUDE.md. Point Claude to the right file 
 
 - `./docs/architecture.md` - Read when creating new services
 - `./docs/secure_engineering.md` - Read when implementing auth or handling user data
-- Use the `/web-ui` skill when building React components
+- Use the `/frontend-design` skill when building React components
 ```
 
 ### 3. Include a "local context" rule for monorepos
@@ -115,7 +115,7 @@ In monorepos, sub-directories may have their own conventions:
 ```markdown
 ## Working with Code
 
-When processing code in a specific path, **always read the local AGENTS.md
+When processing code in a specific path, **always read the local CLAUDE.md
 or README.md file** in that directory first.
 ```
 
@@ -173,14 +173,22 @@ Before every commit, run `git diff --stat HEAD` and review what changed. Watch f
 Claude Code reads instructions from multiple levels (all are additive):
 
 1. **`~/.claude/CLAUDE.md`** -- Global preferences (git conventions, PR style, personal workflow)
-2. **`/project/CLAUDE.md`** -- Project-level instructions (checked into the repo)
-3. **`/project/subdir/CLAUDE.md`** -- Sub-directory overrides (for monorepo packages)
+2. **`./CLAUDE.md`** or **`./.claude/CLAUDE.md`** -- Project-level instructions (checked into the repo)
+3. **`./CLAUDE.local.md`** -- Your personal notes for this project (add it to `.gitignore`)
+4. **`subdir/CLAUDE.md`** -- Loaded on demand when Claude reads files in that directory (useful for monorepo packages)
+5. **`.claude/rules/*.md`** -- Topic-sized rule files, optionally scoped to file paths so they only load when relevant
 
-Use global CLAUDE.md for cross-project preferences like branch naming or PR formatting. Use project CLAUDE.md for everything specific to that codebase.
+Use global CLAUDE.md for cross-project preferences like branch naming or PR formatting. Use project CLAUDE.md for everything specific to that codebase. Run `/init` to generate a first draft from your codebase.
+
+### Imports and AGENTS.md
+
+A CLAUDE.md can pull in other files with `@path/to/file` imports, which keeps the main file short.
+
+If your repo already has an `AGENTS.md` for other coding agents, recent Claude Code versions read it when there is no `CLAUDE.md` in the working directory or above it. If you have both, only `CLAUDE.md` loads by default, so add `@AGENTS.md` to your `CLAUDE.md` to share one set of instructions across tools.
 
 ## Anti-patterns to avoid
 
-- **Too long** -- If CLAUDE.md is over 500 lines, Claude may not absorb it all. Extract details into linked docs.
+- **Too long** -- The docs recommend keeping each CLAUDE.md under about 200 lines; longer files cost context and reduce adherence. Move details into linked docs, imports or path-scoped `.claude/rules/`.
 - **Too vague** -- "Write clean code" is useless. "Use type hints on all function signatures" is actionable.
 - **Duplicating README** -- CLAUDE.md is for AI instructions, not human onboarding. Focus on rules and constraints, not tutorials.
 - **Stale commands** -- If your build command changes, update CLAUDE.md. Stale instructions cause repeated failures.

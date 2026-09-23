@@ -2,7 +2,7 @@
 
 Generate beautiful, self-contained HTML pages that visually explain systems, code changes, plans, and data. Supports architecture diagrams, flowcharts, sequence diagrams, data tables, dashboards, and more.
 
-*Created by [nicobailon](https://github.com/nicobailon) — MIT licensed.*
+*Created by [nicobailon](https://github.com/nicobailon) — MIT licensed.* This folder is a snapshot of v0.1.1. The [upstream repo](https://github.com/nicobailon/visual-explainer) is actively maintained and has newer features such as slide decks; use it if you want the latest version.
 
 ## What it does
 
@@ -35,14 +35,18 @@ The skill outputs an HTML file to `~/.agent/diagrams/` and opens it in the brows
 
 ## Installation
 
-Copy the `visual-explainer/` directory to your Claude Code skills folder:
+**As a plugin:**
+
+```
+/plugin marketplace add houshuang/awesome-claude-code
+/plugin install visual-explainer@awesome-claude-code
+```
+
+**Or copy the folder** (from the repo root):
 
 ```bash
-# Global (available in all projects)
-cp -r visual-explainer/ ~/.claude/skills/visual-explainer/
-
-# Project-specific
-cp -r visual-explainer/ .claude/skills/visual-explainer/
+cp -r skills/visual-explainer ~/.claude/skills/   # all your projects
+cp -r skills/visual-explainer .claude/skills/     # this project only
 ```
 
 ## Files

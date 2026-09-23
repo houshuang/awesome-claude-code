@@ -1,6 +1,6 @@
 # prevent-main-commit
 
-Prevents Claude Code from committing directly to the `main` branch. Forces it to create a feature branch first.
+Prevents Claude Code from committing directly to `main` or `master`. Forces it to create a feature branch first.
 
 This only affects Claude Code — your regular git workflow is unaffected.
 
@@ -10,6 +10,15 @@ When Claude Code works autonomously, it may try to commit directly to `main`. Th
 
 ## Installation
 
+**As a plugin** (recommended):
+
+```
+/plugin marketplace add houshuang/awesome-claude-code
+/plugin install prevent-main-commit@awesome-claude-code
+```
+
+**Or copy it into one project:**
+
 1. Copy the script to your project:
    ```bash
    mkdir -p .claude/hooks
@@ -17,14 +26,19 @@ When Claude Code works autonomously, it may try to commit directly to `main`. Th
    chmod +x .claude/hooks/prevent-main-commit.sh
    ```
 
-2. Add the hook config to `.claude/settings.json` or `.claude/settings.local.json`:
+2. Add the hook config (also in `settings-snippet.json`) to `.claude/settings.json` or `.claude/settings.local.json`:
    ```json
    {
      "hooks": {
        "PreToolUse": [
          {
            "matcher": "Bash",
-           "command": ".claude/hooks/prevent-main-commit.sh"
+           "hooks": [
+             {
+               "type": "command",
+               "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/prevent-main-commit.sh"
+             }
+           ]
          }
        ]
      }
@@ -33,12 +47,14 @@ When Claude Code works autonomously, it may try to commit directly to `main`. Th
 
 ## Configuration
 
-To protect a different branch (e.g. `master` or `develop`), change the branch name in the script:
+Set `PROTECTED_BRANCHES` (space-separated) to protect other branches. The default is `main master`:
 
 ```bash
-if [ "$CURRENT_BRANCH" = "master" ]; then
+export PROTECTED_BRANCHES="main master develop"
 ```
 
 ## How it works
 
-Runs as a `PreToolUse` hook on Bash commands. When it detects a `git commit` while on the `main` branch, it returns a `deny` decision with an explanation. Commands that create a new branch before committing (e.g. `git checkout -b feature && git commit`) are allowed through.
+Runs as a `PreToolUse` hook on Bash commands. When it detects a `git commit` while on a protected branch, it returns a `deny` decision with an explanation. Commands that create a new branch before committing (e.g. `git checkout -b feature && git commit`) are allowed through.
+
+Requires `jq`.

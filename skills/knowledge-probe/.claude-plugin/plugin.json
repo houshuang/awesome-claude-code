@@ -1,0 +1,13 @@
+{
+  "name": "knowledge-probe",
+  "description": "Maps what a user knows about a topic, then writes a personalized explainer.",
+  "author": {
+    "name": "Stian Håklev",
+    "url": "https://github.com/houshuang"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/houshuang/awesome-claude-code",
+  "skills": [
+    "./"
+  ]
+}

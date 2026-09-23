@@ -2,10 +2,20 @@
 
 Generate interactive, self-contained HTML evaluation pages for collecting human ground-truth judgments on structured data. Supports four eval types: rate items, compare A vs B, threshold calibration, and automated extraction recall scoring. Keyboard-driven UI with localStorage persistence and clipboard export.
 
-## Install
+## Installation
+
+**As a plugin:**
+
+```
+/plugin marketplace add houshuang/awesome-claude-code
+/plugin install calibration-eval@awesome-claude-code
+```
+
+**Or copy the folder** (from the repo root):
 
 ```bash
-cp -r skills/calibration-eval ~/.claude/skills/
+cp -r skills/calibration-eval ~/.claude/skills/   # all your projects
+cp -r skills/calibration-eval .claude/skills/     # this project only
 ```
 
 ## Dependencies

@@ -1,0 +1,13 @@
+{
+  "name": "codebase-analyzer",
+  "description": "Read-only subagent that explains how code works, with file:line references.",
+  "author": {
+    "name": "Stian Håklev",
+    "url": "https://github.com/houshuang"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/houshuang/awesome-claude-code",
+  "agents": [
+    "./codebase-analyzer.md"
+  ]
+}

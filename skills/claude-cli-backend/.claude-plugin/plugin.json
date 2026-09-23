@@ -1,0 +1,13 @@
+{
+  "name": "claude-cli-backend",
+  "description": "Reference for using claude -p as a programmatic LLM backend from Python.",
+  "author": {
+    "name": "Stian Håklev",
+    "url": "https://github.com/houshuang"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/houshuang/awesome-claude-code",
+  "skills": [
+    "./"
+  ]
+}

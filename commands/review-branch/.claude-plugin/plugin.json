@@ -1,0 +1,13 @@
+{
+  "name": "review-branch",
+  "description": "Self-reviews the current branch before a PR (superseded by built-in /code-review).",
+  "author": {
+    "name": "Stian Håklev",
+    "url": "https://github.com/houshuang"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/houshuang/awesome-claude-code",
+  "commands": [
+    "./review-branch.md"
+  ]
+}

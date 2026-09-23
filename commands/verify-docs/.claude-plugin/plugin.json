@@ -1,0 +1,13 @@
+{
+  "name": "verify-docs",
+  "description": "Detects drift between documentation and code.",
+  "author": {
+    "name": "Stian Håklev",
+    "url": "https://github.com/houshuang"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/houshuang/awesome-claude-code",
+  "commands": [
+    "./verify-docs.md"
+  ]
+}
